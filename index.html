@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taller Ramos y Ramos – Tu Cotización</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rojo: #CC0000;
+      --rojo-dark: #990000;
+      --rojo-glow: rgba(204,0,0,0.15);
+      --negro: #0f0f0f;
+      --fondo: #141414;
+      --card: #1c1c1c;
+      --card2: #222222;
+      --borde: #2e2e2e;
+      --borde-activo: #444;
+      --texto: #f0f0f0;
+      --muted: #888;
+      --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--fondo); color: var(--texto); min-height: 100vh; }
+
+    .header {
+      background: var(--negro); border-bottom: 3px solid var(--rojo);
+      padding: 16px 24px; display: flex; align-items: center; gap: 14px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo {
+      width: 44px; height: 44px;
+      border-radius: 10px; flex-shrink: 0;
+      object-fit: cover; background: var(--rojo);
+    }
+    .header h1 { font-family: 'Bebas Neue', cursive; font-size: 24px; letter-spacing: 2px; line-height: 1; }
+    .header p { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+    .mode-tag {
+      margin-left: auto; padding: 5px 14px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      background: var(--success); color: #fff;
+    }
+
+    .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 80px; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--borde);
+      border-radius: 14px; padding: 20px; margin-bottom: 18px;
+    }
+    .card-title {
+      font-family: 'Bebas Neue', cursive; font-size: 16px; letter-spacing: 1.5px;
+      color: var(--rojo); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title::before {
+      content: ''; width: 3px; height: 16px; background: var(--rojo);
+      border-radius: 2px; display: inline-block;
+    }
+
+    .tag {
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .tag-crítico, .tag-cr\00EDtico { background: rgba(204,0,0,0.22); color: #ff6060; border: 1px solid rgba(204,0,0,0.45); }
+    .tag-recomendado { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+    .tag-opcional { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.35); }
+
+    .cliente-hero {
+      background: linear-gradient(135deg, var(--negro) 0%, #1a0a0a 100%);
+      border: 1px solid var(--borde); border-radius: 14px;
+      padding: 24px; margin-bottom: 20px; text-align: center;
+    }
+    .cliente-hero h2 { font-family: 'Bebas Neue', cursive; font-size: 28px; letter-spacing: 2px; }
+    .cliente-hero p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+    .cliente-hero .taller-name { color: var(--rojo); font-weight: 700; }
+
+    .instrucciones {
+      background: var(--rojo-glow); border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 14px; padding: 16px; margin-bottom: 20px; font-size: 14px;
+    }
+
+    .cliente-repuesto {
+      background: var(--card); border: 2px solid var(--borde);
+      border-radius: 14px; padding: 20px; margin-bottom: 16px;
+      transition: border-color 0.25s, background 0.25s;
+    }
+    .cliente-repuesto.tiene-seleccion { border-color: var(--rojo); background: rgba(204,0,0,0.04); }
+    .cliente-repuesto-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .cliente-repuesto-nombre { font-weight: 700; font-size: 17px; }
+    .cliente-repuesto-nota { font-size: 13px; color: var(--muted); margin-top: 5px; font-style: italic; }
+
+    .opciones-cliente { display: flex; flex-direction: column; gap: 8px; }
+    .opcion-cliente {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card2); border: 1.5px solid var(--borde);
+      border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.2s;
+    }
+    .opcion-cliente:hover { border-color: var(--borde-activo); }
+    .opcion-cliente.seleccionada { border-color: var(--rojo); background: var(--rojo-glow); }
+    .radio-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid var(--borde-activo); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .opcion-cliente.seleccionada .radio-dot { border-color: var(--rojo); background: var(--rojo); }
+    .radio-dot::after {
+      content: ''; width: 7px; height: 7px; border-radius: 50%;
+      background: #fff; display: none;
+    }
+    .opcion-cliente.seleccionada .radio-dot::after { display: block; }
+    .opcion-cliente-info { flex: 1; }
+    .opcion-cliente-titulo { font-weight: 600; font-size: 14px; }
+    .opcion-cliente-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .opcion-cliente-precio {
+      font-family: 'Bebas Neue', cursive; font-size: 20px;
+      color: var(--success); letter-spacing: 0.5px; white-space: nowrap;
+    }
+    .no-seleccionar {
+      display: flex; align-items: center; gap: 12px;
+      background: transparent; border: 1.5px dashed var(--borde);
+      border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; margin-top: 4px;
+    }
+    .no-seleccionar:hover { border-color: var(--borde-activo); }
+    .no-seleccionar.seleccionada { border-color: var(--muted); background: rgba(120,120,120,0.08); }
+    .no-seleccionar span { font-size: 13px; color: var(--muted); }
+
+    .resumen-box {
+      background: var(--negro); border: 2px solid var(--rojo);
+      border-radius: 14px; padding: 22px; margin-top: 24px;
+    }
+    .resumen-box h3 { font-family: 'Bebas Neue', cursive; font-size: 20px; letter-spacing: 1.5px; color: var(--rojo); margin-bottom: 16px; }
+    .resumen-item { padding: 12px 0; border-bottom: 1px solid var(--borde); }
+    .resumen-item:last-of-type { border-bottom: none; }
+    .resumen-item-nombre { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+    .resumen-item-det { font-size: 13px; color: var(--muted); }
+    .resumen-item-precio { font-family: 'Bebas Neue', cursive; font-size: 20px; color: var(--success); }
+    .resumen-total {
+      background: var(--rojo-glow); border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 10px; padding: 14px; margin-top: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .resumen-total span { font-weight: 700; font-size: 15px; }
+    .resumen-total .monto-total { font-family: 'Bebas Neue', cursive; font-size: 30px; color: var(--success); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 18px; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; text-decoration: none; white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-wa { background: #25d366; color: #fff; }
+    .btn-wa:hover { background: #1dad55; }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    #snackbar {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      padding: 13px 22px; border-radius: 10px; font-size: 14px; font-weight: 600;
+      z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    #snackbar.show { opacity: 1; }
+    #snackbar.ok { background: var(--success); color: #fff; }
+    #snackbar.err { background: var(--rojo); color: #fff; }
+
+    .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; }
+
+    @media (max-width: 640px) {
+      .btn { width: 100%; justify-content: center; }
+      .resumen-total { flex-direction: column; gap: 6px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="logo-1x.png" srcset="logo-1x.png 1x, logo-2x.png 2x, logo-3x.png 3x" alt="Taller Ramos y Ramos" class="logo">
+  <div>
+    <h1>Taller Ramos y Ramos</h1>
+    <p>Tu cotización personalizada</p>
+  </div>
+  <div class="mode-tag">👤 Cliente</div>
+</div>
+
+<div class="wrap" id="appRoot">
+  <div class="empty"><div class="icon">⏳</div><p>Cargando tu cotización...</p></div>
+</div>
+<div id="snackbar"></div>
+
+<script>
+const SUPABASE_URL = 'https://lnsglpvobvfzbxpmyagc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxuc2dscHZvYnZmemJ4cG15YWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNjQ0NTQsImV4cCI6MjA5MDk0MDQ1NH0.QaPVpVqvOe4Sh8brJge7JZzFhB23gt_gvtSqgBVkZ1Y';
+
+function fCRC(n) {
+  return '₡' + Number(n||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function copiarTexto(txt, btn) {
+  navigator.clipboard.writeText(txt).catch(() => {});
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✅';
+    btn.style.color = '#2ecc71';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+  }
+}
+
+function snack(msg, ok=true) {
+  const el = document.getElementById('snackbar');
+  el.textContent = msg;
+  el.className = 'show ' + (ok ? 'ok' : 'err');
+  clearTimeout(snack._t);
+  snack._t = setTimeout(() => { el.className = ''; }, 2400);
+}
+
+// UUID from ?id= (404 redirect) or ?k= (legacy)
+const params = new URLSearchParams(location.search);
+const cotId = params.get('id') || params.get('k');
+
+function showError(txt) {
+  document.getElementById('appRoot').innerHTML = `
+    <div class="empty">
+      <div class="icon">⚠️</div>
+      <p>${esc(txt)}<br>Pedile a tu taller que te reenvíe el link.</p>
+    </div>`;
+}
+
+async function cargar() {
+  if (!cotId) { showError('Link inválido o expirado.'); return; }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cotId)) {
+    showError('Link inválido o expirado.');
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(cotId)}&select=*,clientes(nombre,apellido),vehiculos(patente,modelo,anio)`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = await res.json();
+    const row = rows[0];
+    if (!row) { showError('Cotización no encontrada.'); return; }
+
+    if (row.cliente_aprobado_at) {
+      mostrarYaAprobado(row);
+      return;
+    }
+
+    const tipoCambio = Number(row.tipo_cambio_usado) || 530;
+    const clienteNombre = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || '';
+    const vehiculoDesc = [row.vehiculos?.patente, row.vehiculos?.modelo, row.vehiculos?.anio].filter(Boolean).join(' · ');
+
+    const payload = {
+      _cotizacionId: row.id,
+      taller: 'Taller Ramos y Ramos',
+      cliente: {
+        nombre: clienteNombre,
+        vehiculo: vehiculoDesc,
+        orden: row.orden_id || '',
+      },
+      repuestos: (row.repuestos || [])
+        .map(r => ({
+          nombre: r.nombre || '',
+          _np: r.numero_parte || r.nParte || '',
+          cantidad: r.cantidad || 1,
+          prioridad: r.prioridad || 'Recomendado',
+          nota: r.nota || '',
+          opciones: (r.opciones || [])
+            .filter(op => (Number(op.precioUSD) || 0) > 0)
+            .map(op => ({
+              calidad: op.calidad || '',
+              estado: op.estado || '',
+              origen: op.origen || 'usa',
+              marca: op.marca || '',
+              garantia: op.garantia || '',
+              precioFinalCRC: Number(op.precioFinalCRC) > 0
+                ? Number(op.precioFinalCRC)
+                : Math.round(((Number(op.precioUSD) || 0) + (Number(op.transUSD) || 0)) * tipoCambio * (r.cantidad || 1)),
+            })),
+        }))
+        .filter(r => r.opciones.length > 0),
+    };
+
+    iniciar(payload);
+  } catch(e) {
+    showError('No se pudo cargar la cotización. Intentá de nuevo.');
+  }
+}
+
+function mostrarYaAprobado(row) {
+  const clienteNombre = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || '';
+  const fecha = row.cliente_aprobado_at
+    ? new Date(row.cliente_aprobado_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+  document.getElementById('appRoot').innerHTML = `
+    <div class="cliente-hero" style="margin-top:16px;">
+      <div style="font-size:3rem;margin-bottom:12px;">✅</div>
+      <h2>¡Cotización ya aprobada!</h2>
+      ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
+      ${fecha ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Aprobada el ${esc(fecha)}</p>` : ''}
+    </div>
+    <div class="card" style="text-align:center;color:var(--muted);padding:24px;">
+      <p>Tu selección ya fue registrada. El taller se pondrá en contacto con vos para coordinar el pago y la entrega.</p>
+      <p style="margin-top:12px;font-size:13px;">Si tenés alguna consulta, contactanos por WhatsApp al <strong style="color:var(--texto);">8343-9257</strong>.</p>
+    </div>`;
+}
+
+cargar();
+
+function iniciar(payload) {
+  const { taller, cliente, repuestos: reps } = payload;
+  const sel = new Array(reps.length).fill(null);
+
+  const pagoHTML = `
+  <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:22px;margin-top:16px;">
+    <div style="font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+      <span style="display:inline-block;width:3px;height:16px;background:var(--rojo);border-radius:2px;"></span>
+      Instrucciones de pago
+    </div>
+    <div style="background:var(--rojo-glow);border:1px solid rgba(204,0,0,0.25);border-radius:10px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;">
+      Para proceder con el pedido se requiere el <strong>50% del costo</strong> de los repuestos como adelanto.<br>
+      El adelanto o cancelación total se puede realizar por <strong>transferencia, SINPE o efectivo</strong>, y con <strong>tarjeta de crédito</strong> en días hábiles en nuestro establecimiento.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">🏦 Cuenta BAC Colones</div>
+        <div style="font-size:13px;line-height:2;color:var(--texto);">
+          <div><span style="color:var(--muted);">Cliente:</span> Gustavo Adolfo Ramos Fallas</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="color:var(--muted);">N° cuenta:</span> <strong>935377267</strong>
+            <button onclick="copiarTexto('935377267', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="color:var(--muted);">IBAN:</span> <strong>CR82010200009353772678</strong>
+            <button onclick="copiarTexto('CR82010200009353772678', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">💵 Cuenta BAC Dólares</div>
+        <div style="font-size:13px;line-height:2;color:var(--texto);">
+          <div><span style="color:var(--muted);">Cliente:</span> Gustavo Adolfo Ramos Fallas</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="color:var(--muted);">N° cuenta:</span> <strong>940809213</strong>
+            <button onclick="copiarTexto('940809213', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="color:var(--muted);">IBAN:</span> <strong>CR69010200009408092136</strong>
+            <button onclick="copiarTexto('CR69010200009408092136', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+      <div style="font-size:28px;">📱</div>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;">SINPE Móvil</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:var(--success);">8343-9257</div>
+          <button onclick="copiarTexto('83439257', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">⏱️ Tiempos estimados de entrega</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
+          <span style="font-size:18px;">🇺🇸</span>
+          <div><strong>Estados Unidos</strong> — 7 a 10 días hábiles</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
+          <span style="font-size:18px;">🇪🇺</span>
+          <div><strong>Europa</strong> — 10 a 20 días hábiles</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--borde);font-size:12px;color:var(--muted);">
+        📦 Los pedidos se realizan los fines de semana.<br>
+        ⚠️ El costo de los repuestos no incluye IVA.
+      </div>
+    </div>
+  </div>`;
+
+  function render() {
+    const hero = `
+    <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#fbbf24;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:18px;">⚠️</span>
+      <span><strong>Esta cotización no es una proforma oficial.</strong> Una vez que seleccione sus repuestos, le enviaremos la proforma oficial.</span>
+    </div>
+    <div class="cliente-hero">
+      <h2>Tu cotización de <span class="taller-name">${esc(taller)}</span></h2>
+      <p>${esc(cliente.nombre)}${cliente.vehiculo ? ' · ' + esc(cliente.vehiculo) : ''}${cliente.orden ? ' · ' + esc(cliente.orden) : ''}</p>
+    </div>`;
+
+    const instrucciones = `
+    <div class="instrucciones">
+      👇 <strong>Seleccioná qué repuestos querés aprobar</strong> y cuál opción preferís para cada uno.
+      Cuando termines, tocá <strong>"Confirmar y enviar al taller"</strong>.
+    </div>`;
+
+    const repsHTML = reps.map((r, ri) => {
+      const selIdx = sel[ri];
+      const prioClass = r.prioridad ? r.prioridad.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'') : 'opcional';
+      return `
+      <div class="cliente-repuesto ${selIdx !== null ? 'tiene-seleccion' : ''}" id="crep_${ri}">
+        <div class="cliente-repuesto-header">
+          <div>
+            <div class="cliente-repuesto-nombre">${esc(r.nombre)}${r.cantidad > 1 ? `<span style="font-size:13px;font-weight:500;color:var(--muted);margin-left:8px;">× ${r.cantidad}</span>` : ''}</div>
+            ${r.nota ? `<div class="cliente-repuesto-nota">${esc(r.nota)}</div>` : ''}
+          </div>
+          <span class="tag tag-${prioClass}">${esc(r.prioridad)}</span>
+        </div>
+        <div class="opciones-cliente">
+          ${r.opciones.map((op, oi) => `
+            <label class="opcion-cliente ${selIdx === oi ? 'seleccionada' : ''}" onclick="seleccionar(${ri},${oi})">
+              <div class="radio-dot"></div>
+              <div class="opcion-cliente-info">
+                <div class="opcion-cliente-titulo">${esc(op.calidad)} · ${esc(op.estado)}${op.marca ? ' · ' + esc(op.marca) : ''}</div>
+                <div class="opcion-cliente-meta">${op.origen === 'europa' ? '🇪🇺 Europa' : '🇺🇸 Estados Unidos'}${op.garantia ? ' · 🛡️ Garantía: ' + esc(op.garantia) : ''}</div>
+              </div>
+              <div class="opcion-cliente-precio">${fCRC(op.precioFinalCRC)}</div>
+            </label>
+          `).join('')}
+          <label class="no-seleccionar ${selIdx === -1 ? 'seleccionada' : ''}" onclick="seleccionar(${ri},-1)">
+            <div class="radio-dot" style="${selIdx === -1 ? 'border-color:var(--muted);background:var(--muted);' : ''}"></div>
+            <span>No deseo este repuesto por ahora</span>
+          </label>
+        </div>
+      </div>`;
+    }).join('');
+
+    const todosRespondidos = sel.every(s => s !== null);
+    const algunoAprobado   = sel.some(s => s !== null && s >= 0);
+
+    let resumenHTML = '';
+    if (todosRespondidos && algunoAprobado) {
+      const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi >= 0);
+      const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precioFinalCRC, 0);
+      resumenHTML = `
+      <div class="resumen-box">
+        <h3>✅ Tu selección</h3>
+        ${aprobados.map(({r,oi}) => {
+          const op = r.opciones[oi];
+          return `
+          <div class="resumen-item">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+              <div>
+                <div class="resumen-item-nombre">${esc(r.nombre)}${r.cantidad > 1 ? ` <span style="font-size:12px;font-weight:500;color:var(--muted);">× ${r.cantidad}</span>` : ''}</div>
+                <div class="resumen-item-det">${esc(op.calidad)} · ${esc(op.estado)}${op.marca?' · '+esc(op.marca):''}${op.garantia?' · 🛡️ '+esc(op.garantia):''}</div>
+              </div>
+              <div class="resumen-item-precio">${fCRC(op.precioFinalCRC)}</div>
+            </div>
+          </div>`;
+        }).join('')}
+        <div class="resumen-total">
+          <span>Total aprobado</span>
+          <span class="monto-total">${fCRC(total)}</span>
+        </div>
+
+        <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-top:12px;">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">💳 ¿Cuánto deseás abonar?</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_adelanto">
+              <input type="radio" name="pago_opt" value="adelanto" checked onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:14px;">Adelanto mínimo (50%)</div>
+                <div style="color:#22c55e;font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:1px;">${fCRC(Math.round(total * 0.5))}</div>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_total">
+              <input type="radio" name="pago_opt" value="total" onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:14px;">Pago total</div>
+                <div style="color:#22c55e;font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:1px;">${fCRC(total)}</div>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_otro">
+              <input type="radio" name="pago_opt" value="otro" onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:14px;">Otro monto</div>
+                <div style="font-size:12px;color:var(--muted);">Mínimo ${fCRC(Math.round(total * 0.5))}</div>
+              </div>
+            </label>
+            <div id="otro_monto_wrap" style="display:none;padding:0 4px;">
+              <input id="inp_otro_monto" type="number" min="${Math.round(total*0.5)}" max="${total}" step="1000"
+                placeholder="Ingresá el monto en colones"
+                style="width:100%;background:var(--card);border:1px solid var(--borde);border-radius:8px;padding:10px;color:var(--texto);font-size:14px;">
+              <div id="inp_otro_error" style="font-size:12px;color:#e74c3c;margin-top:4px;display:none;">El monto debe ser entre ${fCRC(Math.round(total*0.5))} y ${fCRC(total)}.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:18px;">
+          <button class="btn btn-wa" id="btnConfirmar" onclick="confirmarAprobacion()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
+            Confirmar y enviar al taller
+          </button>
+        </div>
+        <div id="confirmStatus" style="margin-top:10px;"></div>
+      </div>`;
+
+      window._aprobados = aprobados;
+      window._total = total;
+
+    } else if (todosRespondidos && !algunoAprobado) {
+      resumenHTML = `
+      <div class="card" style="text-align:center;padding:24px;color:var(--muted);">
+        No aprobaste ningún repuesto. Si fue un error, podés cambiar tu selección arriba.
+      </div>`;
+    }
+
+    document.getElementById('appRoot').innerHTML = hero + instrucciones + repsHTML + resumenHTML + pagoHTML;
+  }
+
+  window.seleccionar = function(ri, oi) {
+    sel[ri] = oi;
+    render();
+  };
+
+  window.actualizarPago = function(total) {
+    const opt = document.querySelector('input[name="pago_opt"]:checked')?.value;
+    const wrap = document.getElementById('otro_monto_wrap');
+    if (wrap) wrap.style.display = opt === 'otro' ? 'block' : 'none';
+  };
+
+  window.confirmarAprobacion = function() {
+    const modal = document.createElement('div');
+    modal.id = 'modalInstalacion';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;';
+    modal.innerHTML = `
+      <div style="background:#1c1c1c;border:1px solid #444;border-radius:16px;padding:28px;max-width:400px;width:100%;text-align:center;">
+        <div style="font-size:2rem;margin-bottom:12px;">🔧</div>
+        <div style="font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:1.5px;color:#CC0000;margin-bottom:10px;">Mano de obra</div>
+        <p style="font-size:14px;color:#ccc;line-height:1.6;margin-bottom:24px;">¿Deseás agregar el costo de mano de obra a la proforma oficial?</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button onclick="procesarAprobacion(true)" style="background:#CC0000;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">Sí, incluir instalación</button>
+          <button onclick="procesarAprobacion(false)" style="background:#222;color:#ccc;border:1px solid #444;border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">No, solo los repuestos</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  };
+
+  window.procesarAprobacion = async function(conInstalacion) {
+    document.getElementById('modalInstalacion')?.remove();
+    const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi >= 0);
+    const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precioFinalCRC, 0);
+    const adelantoMin = Math.round(total * 0.5);
+
+    const optPago = document.querySelector('input[name="pago_opt"]:checked')?.value || 'adelanto';
+    let montoPago = adelantoMin;
+    if (optPago === 'total') {
+      montoPago = total;
+    } else if (optPago === 'otro') {
+      const inp = parseInt(document.getElementById('inp_otro_monto')?.value) || 0;
+      if (inp < adelantoMin || inp > total) {
+        const err = document.getElementById('inp_otro_error');
+        if (err) err.style.display = 'block';
+        return;
+      }
+      montoPago = inp;
+    }
+    const labelPago = optPago === 'total' ? 'Pago total' : optPago === 'otro' ? 'Monto personalizado' : 'Adelanto mínimo (50%)';
+
+    const btn = document.getElementById('btnConfirmar');
+    const status = document.getElementById('confirmStatus');
+    if (btn) btn.disabled = true;
+    if (status) status.innerHTML = `<p style="color:var(--muted);font-size:13px;">⏳ Guardando tu selección...</p>`;
+
+    // Open WA window before any await (iOS Safari requirement)
+    const waWin = window.open('', '_blank');
+
+    try {
+      const clienteSeleccion = sel.map((oi, ri) => ({
+        repuesto_idx: ri,
+        opcion_idx: oi,
+        rejected: oi === -1,
+      }));
+
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal',
+          },
+          body: JSON.stringify({
+            cliente_seleccion: clienteSeleccion,
+            cliente_aprobado_at: new Date().toISOString(),
+            adelanto_requerido_calc: adelantoMin,
+            total_aprobado_calc: total,
+            estado: 'aprobado',
+          }),
+        }
+      );
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      if (status) status.innerHTML = `
+        <p style="color:#2ecc71;font-size:13px;margin-bottom:10px;">✅ ¡Selección confirmada!</p>
+        <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:14px;font-size:13px;color:#fbbf24;text-align:left;line-height:1.6;">
+          💳 <strong>Recordá que el adelanto del 50% es requisito para realizar el pedido.</strong><br>
+          Por favor enviá el comprobante de pago al taller por WhatsApp para confirmar tu pedido.
+        </div>`;
+    } catch(e) {
+      if (status) status.innerHTML = `<p style="color:#e74c3c;font-size:13px;">⚠️ Error al guardar: ${esc(e.message)}</p>`;
+      if (btn) btn.disabled = false;
+    }
+
+    // WhatsApp message
+    let msg = `✅ *Aprobación de cotización – Taller Ramos y Ramos*\n`;
+    msg += `📋 N°: ${cliente.orden || '—'}\n`;
+    msg += `👤 Cliente: ${cliente.nombre}\n`;
+    if (cliente.vehiculo) msg += `🚗 Vehículo: ${cliente.vehiculo}\n`;
+    msg += `\n*Repuestos aprobados:*\n`;
+    aprobados.forEach(({r, oi}) => {
+      const op = r.opciones[oi];
+      msg += `• ${r.nombre}${r.cantidad > 1 ? ' (×' + r.cantidad + ')' : ''}\n`;
+      msg += `  → ${op.calidad} / ${op.estado}${op.marca ? ' · ' + op.marca : ''}\n`;
+      if (op.garantia) msg += `  → 🛡️ ${op.garantia}\n`;
+      msg += `  → ${fCRC(op.precioFinalCRC)}\n`;
+    });
+    msg += `\n💰 *Total aprobado: ${fCRC(total)}*\n`;
+    msg += `💵 Monto a pagar (${labelPago}): ${fCRC(montoPago)}\n`;
+    msg += `🔧 Instalación: ${conInstalacion ? 'Sí, incluir instalación' : 'No'}\n`;
+    msg += `\n_Enviado desde el formulario de aprobación Taller Ramos y Ramos_`;
+    if (waWin) {
+      waWin.location.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+    } else {
+      window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    }
+  };
+
+  render();
+}
+</script>
+</body>
+</html>
