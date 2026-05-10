@@ -35,11 +35,6 @@
     }
     .header h1 { font-family: 'Bebas Neue', cursive; font-size: 24px; letter-spacing: 2px; line-height: 1; }
     .header p { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
-    .mode-tag {
-      margin-left: auto; padding: 5px 14px; border-radius: 20px;
-      font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-      background: var(--success); color: #fff;
-    }
 
     .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 80px; }
 
@@ -110,7 +105,7 @@
     .opcion-cliente.seleccionada .radio-dot::after { display: block; }
     .opcion-cliente-info { flex: 1; }
     .opcion-cliente-titulo { font-weight: 600; font-size: 14px; }
-    .opcion-cliente-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .opcion-cliente-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
     .opcion-cliente-precio {
       font-family: 'Bebas Neue', cursive; font-size: 20px;
       color: var(--success); letter-spacing: 0.5px; white-space: nowrap;
@@ -132,7 +127,7 @@
     .resumen-item { padding: 12px 0; border-bottom: 1px solid var(--borde); }
     .resumen-item:last-of-type { border-bottom: none; }
     .resumen-item-nombre { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
-    .resumen-item-det { font-size: 13px; color: var(--muted); }
+    .resumen-item-det { font-size: 14px; color: var(--muted); }
     .resumen-item-precio { font-family: 'Bebas Neue', cursive; font-size: 20px; color: var(--success); }
     .resumen-total {
       background: var(--rojo-glow); border: 1px solid rgba(204,0,0,0.3);
@@ -170,6 +165,12 @@
       .btn { width: 100%; justify-content: center; }
       .resumen-total { flex-direction: column; gap: 6px; text-align: center; }
     }
+    @media (max-width: 600px) {
+      .pago-grid-2col { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 480px) {
+      .header { padding: 12px 16px; gap: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -180,7 +181,6 @@
     <h1>Taller Ramos y Ramos</h1>
     <p>Tu cotización personalizada</p>
   </div>
-  <div class="mode-tag">👤 Cliente</div>
 </div>
 
 <div class="wrap" id="appRoot">
@@ -347,18 +347,18 @@ function iniciar(payload) {
       Para proceder con el pedido se requiere el <strong>50% del costo</strong> de los repuestos como adelanto.<br>
       El adelanto o cancelación total se puede realizar por <strong>transferencia, SINPE o efectivo</strong>, y con <strong>tarjeta de crédito</strong> en días hábiles en nuestro establecimiento.
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div class="pago-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
       <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">🏦 Cuenta BAC Colones</div>
         <div style="font-size:13px;line-height:2;color:var(--texto);">
           <div><span style="color:var(--muted);">Cliente:</span> Gustavo Adolfo Ramos Fallas</div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="color:var(--muted);">N° cuenta:</span> <strong>935377267</strong>
-            <button onclick="copiarTexto('935377267', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+            <button onclick="copiarTexto('935377267', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px 12px;font-size:12px;min-height:32px;color:var(--muted);cursor:pointer;">📋</button>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="color:var(--muted);">IBAN:</span> <strong>CR82010200009353772678</strong>
-            <button onclick="copiarTexto('CR82010200009353772678', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+            <button onclick="copiarTexto('CR82010200009353772678', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px 12px;font-size:12px;min-height:32px;color:var(--muted);cursor:pointer;">📋</button>
           </div>
         </div>
       </div>
@@ -368,11 +368,11 @@ function iniciar(payload) {
           <div><span style="color:var(--muted);">Cliente:</span> Gustavo Adolfo Ramos Fallas</div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="color:var(--muted);">N° cuenta:</span> <strong>940809213</strong>
-            <button onclick="copiarTexto('940809213', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+            <button onclick="copiarTexto('940809213', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px 12px;font-size:12px;min-height:32px;color:var(--muted);cursor:pointer;">📋</button>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="color:var(--muted);">IBAN:</span> <strong>CR69010200009408092136</strong>
-            <button onclick="copiarTexto('CR69010200009408092136', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+            <button onclick="copiarTexto('CR69010200009408092136', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px 12px;font-size:12px;min-height:32px;color:var(--muted);cursor:pointer;">📋</button>
           </div>
         </div>
       </div>
@@ -383,7 +383,7 @@ function iniciar(payload) {
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;">SINPE Móvil</div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:var(--success);">8343-9257</div>
-          <button onclick="copiarTexto('83439257', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);cursor:pointer;">📋</button>
+          <button onclick="copiarTexto('83439257', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px 12px;font-size:12px;min-height:32px;color:var(--muted);cursor:pointer;">📋</button>
         </div>
       </div>
     </div>
