@@ -576,7 +576,7 @@ function iniciar(payload) {
     if (optPago === 'total') {
       montoPago = total;
     } else if (optPago === 'otro') {
-      const inp = parseInt(document.getElementById('inp_otro_monto')?.value) || 0;
+      const inp = parseInt(document.getElementById('inp_otro_monto')?.value, 10) || 0;
       if (inp < adelantoMin || inp > total) {
         const err = document.getElementById('inp_otro_error');
         if (err) err.style.display = 'block';
@@ -628,33 +628,34 @@ function iniciar(payload) {
           💳 <strong>Recordá que el adelanto del 50% es requisito para realizar el pedido.</strong><br>
           Por favor enviá el comprobante de pago al taller por WhatsApp para confirmar tu pedido.
         </div>`;
+
+      // WhatsApp message — only sent after successful save
+      let msg = `✅ *Aprobación de cotización – Taller Ramos y Ramos*\n`;
+      msg += `📋 N°: ${cliente.orden || '—'}\n`;
+      msg += `👤 Cliente: ${cliente.nombre}\n`;
+      if (cliente.vehiculo) msg += `🚗 Vehículo: ${cliente.vehiculo}\n`;
+      msg += `\n*Repuestos aprobados:*\n`;
+      aprobados.forEach(({r, oi}) => {
+        const op = r.opciones[oi];
+        msg += `• ${r.nombre}${r.cantidad > 1 ? ' (×' + r.cantidad + ')' : ''}\n`;
+        msg += `  → ${op.calidad} / ${op.estado}${op.marca ? ' · ' + op.marca : ''}\n`;
+        if (op.garantia) msg += `  → 🛡️ ${op.garantia}\n`;
+        msg += `  → ${fCRC(op.precioFinalCRC)}\n`;
+      });
+      msg += `\n💰 *Total aprobado: ${fCRC(total)}*\n`;
+      msg += `💵 Monto a pagar (${labelPago}): ${fCRC(montoPago)}\n`;
+      msg += `🔧 Instalación: ${conInstalacion ? 'Sí, incluir instalación' : 'No'}\n`;
+      msg += `\n_Enviado desde el formulario de aprobación Taller Ramos y Ramos_`;
+      const waUrl = 'https://wa.me/50688872667?text=' + encodeURIComponent(msg);
+      if (waWin) {
+        waWin.location.href = waUrl;
+      } else {
+        window.open(waUrl, '_blank');
+      }
     } catch(e) {
       if (status) status.innerHTML = `<p style="color:#e74c3c;font-size:13px;">⚠️ Error al guardar: ${esc(e.message)}</p>`;
       if (btn) btn.disabled = false;
-    }
-
-    // WhatsApp message
-    let msg = `✅ *Aprobación de cotización – Taller Ramos y Ramos*\n`;
-    msg += `📋 N°: ${cliente.orden || '—'}\n`;
-    msg += `👤 Cliente: ${cliente.nombre}\n`;
-    if (cliente.vehiculo) msg += `🚗 Vehículo: ${cliente.vehiculo}\n`;
-    msg += `\n*Repuestos aprobados:*\n`;
-    aprobados.forEach(({r, oi}) => {
-      const op = r.opciones[oi];
-      msg += `• ${r.nombre}${r.cantidad > 1 ? ' (×' + r.cantidad + ')' : ''}\n`;
-      msg += `  → ${op.calidad} / ${op.estado}${op.marca ? ' · ' + op.marca : ''}\n`;
-      if (op.garantia) msg += `  → 🛡️ ${op.garantia}\n`;
-      msg += `  → ${fCRC(op.precioFinalCRC)}\n`;
-    });
-    msg += `\n💰 *Total aprobado: ${fCRC(total)}*\n`;
-    msg += `💵 Monto a pagar (${labelPago}): ${fCRC(montoPago)}\n`;
-    msg += `🔧 Instalación: ${conInstalacion ? 'Sí, incluir instalación' : 'No'}\n`;
-    msg += `\n_Enviado desde el formulario de aprobación Taller Ramos y Ramos_`;
-    const waUrl = 'https://wa.me/50688872667?text=' + encodeURIComponent(msg);
-    if (waWin) {
-      waWin.location.href = waUrl;
-    } else {
-      window.open(waUrl, '_blank');
+      if (waWin) waWin.close();
     }
   };
 
