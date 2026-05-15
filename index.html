@@ -408,13 +408,15 @@ function iniciar(payload) {
 
   function render() {
     const hero = `
+    <div style="background:var(--card);border:1px solid var(--borde);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(cliente.nombre)}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">${[cliente.vehiculo, cliente.orden].filter(Boolean).map(esc).join(' · ')}</div>
+      </div>
+    </div>
     <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#fbbf24;display:flex;align-items:center;gap:10px;">
       <span style="font-size:18px;">⚠️</span>
       <span><strong>Esta cotización no es una proforma oficial.</strong> Una vez que seleccione sus repuestos, le enviaremos la proforma oficial.</span>
-    </div>
-    <div class="cliente-hero">
-      <h2>Tu cotización de <span class="taller-name">${esc(taller)}</span></h2>
-      <p>${esc(cliente.nombre)}${cliente.vehiculo ? ' · ' + esc(cliente.vehiculo) : ''}${cliente.orden ? ' · ' + esc(cliente.orden) : ''}</p>
     </div>`;
 
     const instrucciones = `
@@ -454,12 +456,11 @@ function iniciar(payload) {
       </div>`;
     }).join('');
 
-    const todosRespondidos = sel.every(s => s !== null);
-    const algunoAprobado   = sel.some(s => s !== null && s >= 0);
+    const algunoAprobado = sel.some(s => s !== null && s >= 0);
 
     let resumenHTML = '';
-    if (todosRespondidos && algunoAprobado) {
-      const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi >= 0);
+    if (algunoAprobado) {
+      const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi !== null && x.oi >= 0);
       const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precioFinalCRC, 0);
       resumenHTML = `
       <div class="resumen-box">
@@ -516,7 +517,7 @@ function iniciar(payload) {
         </div>
 
         <div class="row" style="margin-top:18px;">
-          <button class="btn btn-wa" id="btnConfirmar" onclick="confirmarAprobacion()">
+          <button class="btn btn-wa" id="btnConfirmar" onclick="handleSubmitClick()">
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
             Confirmar y enviar al taller
           </button>
@@ -527,10 +528,14 @@ function iniciar(payload) {
       window._aprobados = aprobados;
       window._total = total;
 
-    } else if (todosRespondidos && !algunoAprobado) {
+    } else {
       resumenHTML = `
-      <div class="card" style="text-align:center;padding:24px;color:var(--muted);">
-        No aprobaste ningún repuesto. Si fue un error, podés cambiar tu selección arriba.
+      <div style="margin-top:20px;text-align:center;">
+        <button class="btn btn-wa" disabled style="opacity:0.45;cursor:not-allowed;pointer-events:none;">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
+          Confirmar y enviar al taller
+        </button>
+        <p style="font-size:13px;color:#6b7280;margin-top:8px;">Seleccioná al menos un repuesto para enviar</p>
       </div>`;
     }
 
@@ -547,6 +552,57 @@ function iniciar(payload) {
     const wrap = document.getElementById('otro_monto_wrap');
     if (wrap) wrap.style.display = opt === 'otro' ? 'block' : 'none';
   };
+
+  window.handleSubmitClick = function() {
+    const unmarked = [];
+    for (let i = 0; i < reps.length; i++) {
+      if (sel[i] === null) {
+        unmarked.push(reps[i].nombre);
+      }
+    }
+    if (unmarked.length === 0) {
+      confirmarAprobacion();
+    } else {
+      showConfirmModal(unmarked);
+    }
+  };
+
+  function showConfirmModal(unmarked) {
+    const existing = document.getElementById('confirmModal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'confirmModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+    overlay.innerHTML = `
+      <div id="modalContent" style="background:#1c1c1c;border:1px solid #444;border-radius:12px;padding:24px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
+        <div style="font-weight:600;font-size:17px;color:#f0f0f0;margin-bottom:14px;">Repuestos sin seleccionar</div>
+        <p style="font-size:14px;color:#9ca3af;margin-bottom:12px;line-height:1.5;">Los siguientes repuestos no fueron seleccionados y se tomarán como rechazados:</p>
+        <ul style="padding-left:20px;color:#d1d5db;line-height:1.8;margin:0 0 4px;">
+          ${unmarked.map(n => `<li>${esc(n)}</li>`).join('')}
+        </ul>
+        <p style="margin-top:18px;font-weight:500;color:#f0f0f0;font-size:15px;">¿Confirmar y enviar?</p>
+        <div id="modalBtnRow" style="margin-top:22px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+          <button id="btnModalVolver" style="background:#374151;color:#f0f0f0;padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;min-width:100px;">Volver</button>
+          <button id="btnModalConfirmar" style="background:#CC0000;color:#fff;padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:600;min-width:140px;">Confirmar y enviar</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    if (window.innerWidth < 480) {
+      const btnRow = document.getElementById('modalBtnRow');
+      btnRow.style.flexDirection = 'column-reverse';
+      btnRow.querySelectorAll('button').forEach(b => { b.style.width = '100%'; b.style.padding = '12px 20px'; });
+      document.getElementById('modalContent').style.padding = '20px';
+    }
+
+    document.getElementById('btnModalVolver').addEventListener('click', () => overlay.remove());
+    document.getElementById('btnModalConfirmar').addEventListener('click', () => { overlay.remove(); confirmarAprobacion(); });
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    const escHandler = e => { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escHandler); } };
+    document.addEventListener('keydown', escHandler);
+  }
 
   window.confirmarAprobacion = function() {
     const modal = document.createElement('div');
@@ -567,7 +623,7 @@ function iniciar(payload) {
 
   window.procesarAprobacion = async function(conInstalacion) {
     document.getElementById('modalInstalacion')?.remove();
-    const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi >= 0);
+    const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi !== null && x.oi >= 0);
     const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precioFinalCRC, 0);
     const adelantoMin = Math.round(total * 0.5);
 
@@ -595,11 +651,28 @@ function iniciar(payload) {
     const waWin = window.open('', '_blank');
 
     try {
-      const clienteSeleccion = sel.map((oi, ri) => ({
-        repuesto_idx: ri,
-        opcion_idx: oi,
-        rejected: oi === -1,
-      }));
+      const clienteSeleccion = sel.map((oi, ri) => {
+        if (oi !== null && oi >= 0) return { repuesto_idx: ri, opcion_idx: oi, rejected: false };
+        if (oi === -1) return { repuesto_idx: ri, rejected: true };
+        return { repuesto_idx: ri, rejected: true }; // null = rechazo implícito
+      });
+
+      const ALREADY_APPROVED = ['aprobado','en_camino','listo','agendado','en_taller','cobrado'];
+      if (payload._cotizacionId) {
+        try {
+          const chkRes = await fetch(`${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}&select=cliente_aprobado_at,estado`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+          });
+          const [fresh] = await chkRes.json();
+          if (fresh && (fresh.cliente_aprobado_at || ALREADY_APPROVED.includes(fresh.estado))) {
+            if (btn) btn.disabled = false;
+            if (waWin) waWin.close();
+            alert('Esta cotización ya fue aprobada. Recargá la página para ver el estado actualizado.');
+            window.location.reload();
+            return;
+          }
+        } catch(e) { /* fail open */ }
+      }
 
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}`,
