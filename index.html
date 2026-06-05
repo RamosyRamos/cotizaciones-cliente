@@ -706,6 +706,19 @@ function iniciar(payload) {
       );
       if (!res.ok) throw new Error('HTTP ' + res.status);
 
+      fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+        body: JSON.stringify({
+          to_user_nombres: ['Gustavo Ramos', 'Joseline Guzman'],
+          event_type: 'cotizacion_aprobada',
+          title: '👤 Cliente aprobó cotización',
+          body: `${cliente.vehiculo || cliente.nombre || ''}`,
+          url: '/repuestos',
+          tag: `cotizacion-aprobada-${payload._cotizacionId}`,
+        }),
+      }).catch(() => {});
+
       if (status) status.innerHTML = `
         <p style="color:#2ecc71;font-size:13px;margin-bottom:10px;">✅ ¡Selección confirmada!</p>
         <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:14px;font-size:13px;color:#fbbf24;text-align:left;line-height:1.6;">
