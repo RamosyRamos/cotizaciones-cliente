@@ -87,11 +87,11 @@
 
     .instrucciones {
       background: var(--card2); border: 1px solid var(--borde);
-      border-radius: 14px; padding: 16px; margin-bottom: 20px; font-size: 14px;
+      border-radius: 14px; padding: 20px; margin-bottom: 20px; font-size: 14px;
     }
 
     .cliente-repuesto {
-      background: var(--card); border: 2px solid var(--borde);
+      background: var(--card); border: 1px solid var(--borde);
       border-radius: 14px; padding: 20px; margin-bottom: 16px;
       transition: border-color 0.25s, background 0.25s;
     }
@@ -129,7 +129,7 @@
     .no-seleccionar {
       display: flex; align-items: center; gap: 12px;
       background: transparent; border: 1.5px dashed var(--borde);
-      border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; margin-top: 4px;
+      border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; margin-top: 8px;
     }
     .no-seleccionar:hover { border-color: var(--borde-activo); }
     .no-seleccionar.seleccionada { border-color: var(--muted); background: var(--card2); }
@@ -137,7 +137,7 @@
 
     .resumen-box {
       background: var(--card); border: 1px solid var(--borde);
-      border-radius: 14px; padding: 22px; margin-top: 24px;
+      border-radius: 14px; padding: 20px; margin-top: 20px;
     }
     .resumen-box h3 { font-family: 'Titillium Web', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--rojo); margin-bottom: 16px; }
     .resumen-item { padding: 12px 0; border-bottom: 1px solid var(--borde); }
@@ -151,7 +151,7 @@
       display: flex; justify-content: space-between; align-items: center;
     }
     .resumen-total span { font-weight: 700; font-size: 15px; }
-    .resumen-total .monto-total { font-family: 'Titillium Web', sans-serif; font-size: 30px; color: var(--success); }
+    .resumen-total .monto-total { font-family: 'Titillium Web', sans-serif; font-size: 30px; color: var(--texto); }
 
     .btn {
       display: inline-flex; align-items: center; gap: 7px;
@@ -375,7 +375,7 @@ function iniciar(payload) {
   const sel = new Array(reps.length).fill(null);
 
   const pagoHTML = `
-  <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:22px;margin-top:16px;">
+  <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:20px;">
     <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
       <span style="display:inline-block;width:3px;height:16px;background:var(--rojo);border-radius:2px;"></span>
       Instrucciones de pago
@@ -488,10 +488,10 @@ function iniciar(payload) {
       ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--success);flex-shrink:0;"></span><span>Cotización del <b style="color:var(--dim);font-weight:700;">${esc(fechaCot)}</b> · válida por <b style="color:var(--dim);font-weight:700;">30 días</b></span></div>` : ''}`
       : '';
     const heroCard = (folio || tieneVeh)
-      ? `<div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:22px;margin-bottom:14px;">${folio ? `<div style="display:flex;justify-content:flex-end;">${folioBlock}</div>` : ''}${vehBlock}</div>`
+      ? `<div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-bottom:20px;">${folio ? `<div style="display:flex;justify-content:flex-end;">${folioBlock}</div>` : ''}${vehBlock}</div>`
       : '';
     const hero = `${heroCard}
-    <div style="color:var(--dim);font-size:13px;line-height:1.55;padding-bottom:18px;border-bottom:1px solid var(--borde);margin-bottom:22px;">
+    <div style="color:var(--dim);font-size:13px;line-height:1.55;padding-bottom:18px;border-bottom:1px solid var(--borde);margin-bottom:20px;">
       <b style="color:var(--warn);font-weight:700;">Esta cotización aún no es una proforma oficial.</b> Elegí los repuestos que querés aprobar y te enviamos la proforma final con el detalle.
     </div>`;
 
@@ -620,7 +620,7 @@ function iniciar(payload) {
       : `Hola, tengo una consulta sobre mi cotización a nombre de ${cliente.nombre}`;
     const consultaWa = 'https://wa.me/50683439257?text=' + encodeURIComponent(consultaMsg);
     const footer = `
-    <div style="border-top:1px solid var(--borde);margin-top:24px;padding-top:22px;text-align:center;">
+    <div style="border-top:1px solid var(--borde);margin-top:20px;padding-top:22px;text-align:center;">
       <div style="font-size:15px;font-weight:700;color:var(--texto);">¿Tenés dudas sobre tu cotización?</div>
       <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">Escribinos y con gusto te ayudamos.</div>
       <div style="margin-top:14px;"><a href="${consultaWa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:11px 20px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Escribir al taller</a></div>
