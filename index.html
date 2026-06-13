@@ -4,27 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Taller Ramos y Ramos – Tu Cotización</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --rojo: #CC0000;
-      --rojo-dark: #990000;
-      --rojo-glow: rgba(204,0,0,0.15);
-      --negro: #0f0f0f;
-      --fondo: #141414;
-      --card: #1c1c1c;
-      --card2: #222222;
-      --borde: #2e2e2e;
+      --fondo:    #E6E4DB;
+      --negro:    #1A1A1D;
+      --card:     #FCFBF8;
+      --card2:    #F2F0E9;
+      --borde:    #D6D3C8;
       --borde-activo: #444;
-      --texto: #f0f0f0;
-      --muted: #888;
-      --success: #22c55e;
+      --texto:    #1A1A1D;
+      --muted:    #8A8C86;
+      --success:  #1F7A4D;
+      --rojo:     #B83A2E;
+      --rojo-dark:#8F2A20;
+      --rojo-glow:rgba(184,58,46,0.10);
+      --navy:     #15225F;
+      --dim:      #5C5C62;
+      --line2:    #E4E1D8;
+      --warn:        #8A5A0A;
+      --warn-bg:     #FBF3E0;
+      --warn-border: #D9B870;
+      --crit-bg:      #F7E0DC;
+      --crit-border:  #D99B92;
+      --ok-tag-bg:    #E0F0E6;
+      --ok-tag-border:#9BCBAE;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--fondo); color: var(--texto); min-height: 100vh; }
+    body { font-family: 'Titillium Web', sans-serif; background: var(--fondo); color: var(--texto); min-height: 100vh; }
 
     .header {
-      background: var(--negro); border-bottom: 3px solid var(--rojo);
+      background: var(--card); border-bottom: 3px solid var(--rojo);
       padding: 16px 24px; display: flex; align-items: center; gap: 14px;
       position: sticky; top: 0; z-index: 100;
     }
@@ -33,7 +43,7 @@
       border-radius: 10px; flex-shrink: 0;
       object-fit: contain;
     }
-    .header h1 { font-family: 'Bebas Neue', cursive; font-size: 24px; letter-spacing: 2px; line-height: 1; }
+    .header h1 { font-family: 'Titillium Web', sans-serif; font-size: 24px; letter-spacing: 2px; line-height: 1; color: var(--texto); }
     .header p { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
     .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 80px; }
@@ -43,7 +53,7 @@
       border-radius: 14px; padding: 20px; margin-bottom: 18px;
     }
     .card-title {
-      font-family: 'Bebas Neue', cursive; font-size: 16px; letter-spacing: 1.5px;
+      font-family: 'Titillium Web', sans-serif; font-size: 16px; letter-spacing: 1.5px;
       color: var(--rojo); margin-bottom: 16px;
       display: flex; align-items: center; gap: 8px;
     }
@@ -56,21 +66,27 @@
       font-size: 11px; font-weight: 700; padding: 3px 10px;
       border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
     }
-    .tag-crítico, .tag-cr\00EDtico { background: rgba(204,0,0,0.22); color: #ff6060; border: 1px solid rgba(204,0,0,0.45); }
-    .tag-recomendado { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
-    .tag-opcional { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.35); }
+    .tag-critico, .tag-crítico, .tag-cr\00EDtico { background: var(--crit-bg); color: var(--rojo); border: 1px solid var(--crit-border); }
+    .tag-recomendado { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+    .tag-opcional { background: var(--ok-tag-bg); color: var(--success); border: 1px solid var(--ok-tag-border); }
+
+    .mf{display:inline-block;width:16px;height:11px;border-radius:1.5px;overflow:hidden;border:.5px solid rgba(0,0,0,.12);vertical-align:-1px;position:relative}
+    .mf.us{background:repeating-linear-gradient(#b22234 0 1.57px,#fff 1.57px 3.14px)}
+    .mf.us::after{content:'';position:absolute;top:0;left:0;width:42%;height:55%;background:#3c3b6e}
+    .mf.eu{background:#003399;display:inline-flex;align-items:center;justify-content:center;color:#FFCC00;font-size:7px;line-height:1}
+    .mf.eu::after{content:'★'}
 
     .cliente-hero {
-      background: linear-gradient(135deg, var(--negro) 0%, #1a0a0a 100%);
+      background: var(--card);
       border: 1px solid var(--borde); border-radius: 14px;
       padding: 24px; margin-bottom: 20px; text-align: center;
     }
-    .cliente-hero h2 { font-family: 'Bebas Neue', cursive; font-size: 28px; letter-spacing: 2px; }
+    .cliente-hero h2 { font-family: 'Titillium Web', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--texto); }
     .cliente-hero p { color: var(--muted); font-size: 14px; margin-top: 6px; }
     .cliente-hero .taller-name { color: var(--rojo); font-weight: 700; }
 
     .instrucciones {
-      background: var(--rojo-glow); border: 1px solid rgba(204,0,0,0.3);
+      background: var(--card2); border: 1px solid var(--borde);
       border-radius: 14px; padding: 16px; margin-bottom: 20px; font-size: 14px;
     }
 
@@ -79,7 +95,7 @@
       border-radius: 14px; padding: 20px; margin-bottom: 16px;
       transition: border-color 0.25s, background 0.25s;
     }
-    .cliente-repuesto.tiene-seleccion { border-color: var(--rojo); background: rgba(204,0,0,0.04); }
+    .cliente-repuesto.tiene-seleccion { border-color: var(--success); background: color-mix(in srgb, var(--success) 7%, transparent); }
     .cliente-repuesto-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
     .cliente-repuesto-nombre { font-weight: 700; font-size: 17px; }
     .cliente-repuesto-nota { font-size: 13px; color: var(--muted); margin-top: 5px; font-style: italic; }
@@ -91,23 +107,23 @@
       border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.2s;
     }
     .opcion-cliente:hover { border-color: var(--borde-activo); }
-    .opcion-cliente.seleccionada { border-color: var(--rojo); background: var(--rojo-glow); }
+    .opcion-cliente.seleccionada { border-color: var(--success); background: color-mix(in srgb, var(--success) 7%, transparent); }
     .radio-dot {
       width: 18px; height: 18px; border-radius: 50%;
       border: 2px solid var(--borde-activo); flex-shrink: 0;
       display: flex; align-items: center; justify-content: center; transition: all 0.2s;
     }
-    .opcion-cliente.seleccionada .radio-dot { border-color: var(--rojo); background: var(--rojo); }
+    .opcion-cliente.seleccionada .radio-dot { border-color: var(--success); background: var(--success); }
     .radio-dot::after {
       content: ''; width: 7px; height: 7px; border-radius: 50%;
-      background: #fff; display: none;
+      background: var(--card); display: none;
     }
     .opcion-cliente.seleccionada .radio-dot::after { display: block; }
     .opcion-cliente-info { flex: 1; }
     .opcion-cliente-titulo { font-weight: 600; font-size: 14px; }
     .opcion-cliente-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
     .opcion-cliente-precio {
-      font-family: 'Bebas Neue', cursive; font-size: 20px;
+      font-family: 'Titillium Web', sans-serif; font-size: 20px;
       color: var(--success); letter-spacing: 0.5px; white-space: nowrap;
     }
     .no-seleccionar {
@@ -116,36 +132,37 @@
       border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; margin-top: 4px;
     }
     .no-seleccionar:hover { border-color: var(--borde-activo); }
-    .no-seleccionar.seleccionada { border-color: var(--muted); background: rgba(120,120,120,0.08); }
+    .no-seleccionar.seleccionada { border-color: var(--muted); background: var(--card2); }
     .no-seleccionar span { font-size: 13px; color: var(--muted); }
 
     .resumen-box {
-      background: var(--negro); border: 2px solid var(--rojo);
+      background: var(--card); border: 1px solid var(--borde);
       border-radius: 14px; padding: 22px; margin-top: 24px;
     }
-    .resumen-box h3 { font-family: 'Bebas Neue', cursive; font-size: 20px; letter-spacing: 1.5px; color: var(--rojo); margin-bottom: 16px; }
+    .resumen-box h3 { font-family: 'Titillium Web', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--rojo); margin-bottom: 16px; }
     .resumen-item { padding: 12px 0; border-bottom: 1px solid var(--borde); }
     .resumen-item:last-of-type { border-bottom: none; }
     .resumen-item-nombre { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
     .resumen-item-det { font-size: 14px; color: var(--muted); }
-    .resumen-item-precio { font-family: 'Bebas Neue', cursive; font-size: 20px; color: var(--success); }
+    .resumen-item-precio { font-family: 'Titillium Web', sans-serif; font-size: 20px; color: var(--success); }
     .resumen-total {
-      background: var(--rojo-glow); border: 1px solid rgba(204,0,0,0.3);
+      background: var(--card2); border: 1px solid var(--borde);
       border-radius: 10px; padding: 14px; margin-top: 14px;
       display: flex; justify-content: space-between; align-items: center;
     }
     .resumen-total span { font-weight: 700; font-size: 15px; }
-    .resumen-total .monto-total { font-family: 'Bebas Neue', cursive; font-size: 30px; color: var(--success); }
+    .resumen-total .monto-total { font-family: 'Titillium Web', sans-serif; font-size: 30px; color: var(--success); }
 
     .btn {
       display: inline-flex; align-items: center; gap: 7px;
       padding: 10px 18px; border: none; border-radius: 8px;
-      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      font-family: 'Titillium Web', sans-serif; font-size: 14px; font-weight: 600;
       cursor: pointer; transition: all 0.15s; text-decoration: none; white-space: nowrap;
     }
     .btn:active { transform: scale(0.97); }
-    .btn-wa { background: #25d366; color: #fff; }
-    .btn-wa:hover { background: #1dad55; }
+    .btn-wa { background: #25D366; color: #fff; }
+    .btn-wa:hover { filter: brightness(1.12); }
+    .btn-wa:disabled { background: var(--muted); color: var(--card); filter: none; cursor: not-allowed; }
 
     .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
@@ -155,8 +172,8 @@
       z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none;
     }
     #snackbar.show { opacity: 1; }
-    #snackbar.ok { background: var(--success); color: #fff; }
-    #snackbar.err { background: var(--rojo); color: #fff; }
+    #snackbar.ok { background: var(--success); color: var(--card); }
+    #snackbar.err { background: var(--rojo); color: var(--card); }
 
     .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
     .empty .icon { font-size: 48px; margin-bottom: 12px; }
@@ -179,7 +196,7 @@
   <img src="logo-1x.png" srcset="logo-1x.png 1x, logo-2x.png 2x, logo-3x.png 3x" alt="Taller Ramos y Ramos" class="logo">
   <div>
     <h1>Taller Ramos y Ramos</h1>
-    <p>Tu cotización personalizada</p>
+    <p id="headerSub">Tu cotización personalizada</p>
   </div>
 </div>
 
@@ -203,7 +220,7 @@ function copiarTexto(txt, btn) {
   if (btn) {
     const orig = btn.textContent;
     btn.textContent = '✅';
-    btn.style.color = '#2ecc71';
+    btn.style.color = 'var(--success)';
     setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
   }
 }
@@ -237,7 +254,7 @@ async function cargar() {
 
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(cotId)}&select=*,clientes(nombre,apellido),vehiculos(patente,modelo,anio)`,
+      `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(cotId)}&select=*,clientes(nombre,apellido),vehiculos(patente,modelo,anio,marca,version,color)`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
     );
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -272,6 +289,13 @@ async function cargar() {
         nombre: clienteNombre,
         vehiculo: vehiculoDesc,
         orden: row.orden_id || '',
+        patente: row.vehiculos?.patente || '',
+        modelo: row.vehiculos?.modelo || '',
+        version: row.vehiculos?.version || '',
+        anio: row.vehiculos?.anio || '',
+        color: row.vehiculos?.color || '',
+        createdAt: row.created_at || '',
+        tieneVehiculo: !!row.vehiculos,
       },
       repuestos: (row.repuestos || [])
         .map(r => ({
@@ -323,7 +347,7 @@ function mostrarYaAprobado(row) {
         Si necesitás modificar tu selección, contactanos. El taller puede reabrir tu cotización para que la apruebes nuevamente.
       </div>
       <a href="#" id="btnContactarTaller"
-         style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25d366;color:#fff;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">
+         style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--navy);color:var(--card);border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">
         📞 Necesito modificar mi selección
       </a>
     </div>`;
@@ -346,15 +370,17 @@ cargar();
 
 function iniciar(payload) {
   const { taller, cliente, repuestos: reps } = payload;
+  const _headerSub = document.getElementById('headerSub');
+  if (_headerSub && cliente.nombre) _headerSub.textContent = 'Cotización confeccionada para ' + cliente.nombre;
   const sel = new Array(reps.length).fill(null);
 
   const pagoHTML = `
   <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:22px;margin-top:16px;">
-    <div style="font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+    <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
       <span style="display:inline-block;width:3px;height:16px;background:var(--rojo);border-radius:2px;"></span>
       Instrucciones de pago
     </div>
-    <div style="background:var(--rojo-glow);border:1px solid rgba(204,0,0,0.25);border-radius:10px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;">
+    <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;">
       Para proceder con el pedido se requiere el <strong>50% del costo</strong> de los repuestos como adelanto.<br>
       El adelanto o cancelación total se puede realizar por <strong>transferencia, SINPE o efectivo</strong>, y con <strong>tarjeta de crédito</strong> en días hábiles en nuestro establecimiento.
     </div>
@@ -393,7 +419,7 @@ function iniciar(payload) {
       <div style="flex:1;">
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;">SINPE Móvil</div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:var(--success);">8343-9257</div>
+          <div style="font-family:'Titillium Web',sans-serif;font-size:26px;letter-spacing:2px;color:var(--navy);">8343-9257</div>
           <button onclick="copiarTexto('83439257', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px 12px;font-size:12px;min-height:32px;color:var(--muted);cursor:pointer;">📋</button>
         </div>
       </div>
@@ -402,11 +428,11 @@ function iniciar(payload) {
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">⏱️ Tiempos estimados de entrega</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
-          <span style="font-size:18px;">🇺🇸</span>
+          <span class="mf us"></span>
           <div><strong>Estados Unidos</strong> — 7 a 10 días hábiles</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
-          <span style="font-size:18px;">🇪🇺</span>
+          <span class="mf eu"></span>
           <div><strong>Europa</strong> — 10 a 20 días hábiles</div>
         </div>
       </div>
@@ -417,17 +443,56 @@ function iniciar(payload) {
     </div>
   </div>`;
 
-  function render() {
-    const hero = `
-    <div style="background:var(--card);border:1px solid var(--borde);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(cliente.nombre)}</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:2px;">${[cliente.vehiculo, cliente.orden].filter(Boolean).map(esc).join(' · ')}</div>
+  function placaHTML(patente) {
+    const p = (patente || '').trim();
+    if (!p) {
+      return `<div style="display:inline-flex;flex-direction:column;align-items:center;background:#ECECE6;border:2.5px solid var(--muted);border-radius:7px;padding:5px 18px 6px;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
+        <span style="font-family:'Titillium Web',sans-serif;font-size:8px;font-weight:700;color:var(--muted);letter-spacing:2px;">COSTA RICA</span>
+        <span style="font-family:'Titillium Web',sans-serif;font-size:26px;font-weight:700;color:var(--muted);letter-spacing:1.5px;line-height:1;">S/P</span>
+      </div>`;
+    }
+    return `<div style="position:relative;display:inline-flex;flex-direction:column;align-items:center;background:#ECECE6;border:2.5px solid var(--navy);border-radius:7px;padding:5px 18px 6px;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
+      <div style="position:absolute;top:4px;right:5px;width:16px;height:11px;display:flex;flex-direction:column;border:0.5px solid rgba(0,0,0,0.2);border-radius:1px;overflow:hidden;">
+        <i style="display:block;width:100%;height:18%;background:#002b7f;"></i>
+        <i style="display:block;width:100%;height:14%;background:#fff;"></i>
+        <i style="display:block;width:100%;height:36%;background:#ce1126;"></i>
+        <i style="display:block;width:100%;height:14%;background:#fff;"></i>
+        <i style="display:block;width:100%;height:18%;background:#002b7f;"></i>
       </div>
-    </div>
-    <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#fbbf24;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:18px;">⚠️</span>
-      <span><strong>Esta cotización no es una proforma oficial.</strong> Una vez que seleccione sus repuestos, le enviaremos la proforma oficial.</span>
+      <span style="font-family:'Titillium Web',sans-serif;font-size:8px;font-weight:700;color:var(--navy);letter-spacing:2px;">COSTA RICA</span>
+      <span style="font-family:'Titillium Web',sans-serif;font-size:26px;font-weight:700;color:var(--navy);letter-spacing:1.5px;line-height:1;">${esc(p.toUpperCase())}</span>
+    </div>`;
+  }
+
+  function folioNum(orden) {
+    const s = String(orden || '').trim();
+    if (!s.startsWith('INT-#')) return '';   // solo el consecutivo real de la calculadora
+    const n = s.slice(5);                     // quita el prefijo "INT-#"
+    return n ? '#' + n : '';
+  }
+
+  function render() {
+    const tieneVeh = cliente.tieneVehiculo;
+    const modeloLinea = [cliente.modelo, cliente.version].filter(Boolean).join(' · ');
+    const fechaCot = cliente.createdAt
+      ? new Date(cliente.createdAt).toLocaleDateString('es-CR', { day: 'numeric', month: 'long' })
+      : '';
+    const folio = folioNum(cliente.orden);
+    const folioBlock = folio
+      ? `<div style="text-align:right;flex-shrink:0;"><div style="font-family:'Titillium Web',sans-serif;font-size:7.5px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:600;">Cotización</div><div style="font-family:'Titillium Web',sans-serif;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:0.5px;">${esc(folio)}</div></div>`
+      : '';
+    const vehBlock = tieneVeh
+      ? `<div style="font-family:'Cormorant',serif;font-size:22px;font-weight:600;color:var(--dim);${folio ? 'margin-top:8px;' : ''}line-height:1.15;">Mercedes-Benz</div>
+      ${modeloLinea ? `<div style="font-family:'Cormorant',serif;font-size:30px;font-weight:500;color:var(--texto);line-height:1.15;">${esc(modeloLinea)}</div>` : ''}
+      <div style="display:flex;justify-content:center;align-items:flex-end;gap:12px;margin-top:16px;flex-wrap:wrap;">${placaHTML(cliente.patente)}</div>
+      ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--success);flex-shrink:0;"></span><span>Cotización del <b style="color:var(--dim);font-weight:700;">${esc(fechaCot)}</b> · válida por <b style="color:var(--dim);font-weight:700;">30 días</b></span></div>` : ''}`
+      : '';
+    const heroCard = (folio || tieneVeh)
+      ? `<div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:22px;margin-bottom:14px;">${folio ? `<div style="display:flex;justify-content:flex-end;">${folioBlock}</div>` : ''}${vehBlock}</div>`
+      : '';
+    const hero = `${heroCard}
+    <div style="color:var(--dim);font-size:13px;line-height:1.55;padding-bottom:18px;border-bottom:1px solid var(--borde);margin-bottom:22px;">
+      <b style="color:var(--warn);font-weight:700;">Esta cotización aún no es una proforma oficial.</b> Elegí los repuestos que querés aprobar y te enviamos la proforma final con el detalle.
     </div>`;
 
     const instrucciones = `
@@ -454,7 +519,7 @@ function iniciar(payload) {
               <div class="radio-dot"></div>
               <div class="opcion-cliente-info">
                 <div class="opcion-cliente-titulo">${esc(op.calidad)} · ${esc(op.estado)}${op.marca ? ' · ' + esc(op.marca) : ''}</div>
-                <div class="opcion-cliente-meta">${op.origen === 'europa' ? '🇪🇺 Europa' : '🇺🇸 Estados Unidos'}${op.garantia ? ' · 🛡️ Garantía: ' + esc(op.garantia) : ''}</div>
+                <div class="opcion-cliente-meta">${op.origen === 'europa' ? '<span class="mf eu"></span> Europa' : '<span class="mf us"></span> Estados Unidos'}${op.garantia ? ' · 🛡️ Garantía: ' + esc(op.garantia) : ''}</div>
               </div>
               <div class="opcion-cliente-precio">${fCRC(op.precioFinalCRC)}</div>
             </label>
@@ -501,14 +566,14 @@ function iniciar(payload) {
               <input type="radio" name="pago_opt" value="adelanto" checked onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
               <div style="flex:1;">
                 <div style="font-weight:600;font-size:14px;">Adelanto mínimo (50%)</div>
-                <div style="color:#22c55e;font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:1px;">${fCRC(Math.round(total * 0.5))}</div>
+                <div style="color:var(--success);font-family:'Titillium Web',sans-serif;font-size:20px;letter-spacing:1px;">${fCRC(Math.round(total * 0.5))}</div>
               </div>
             </label>
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_total">
               <input type="radio" name="pago_opt" value="total" onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
               <div style="flex:1;">
                 <div style="font-weight:600;font-size:14px;">Pago total</div>
-                <div style="color:#22c55e;font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:1px;">${fCRC(total)}</div>
+                <div style="color:var(--success);font-family:'Titillium Web',sans-serif;font-size:20px;letter-spacing:1px;">${fCRC(total)}</div>
               </div>
             </label>
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_otro">
@@ -522,7 +587,7 @@ function iniciar(payload) {
               <input id="inp_otro_monto" type="number" min="${Math.round(total*0.5)}" max="${total}" step="1000"
                 placeholder="Ingresá el monto en colones"
                 style="width:100%;background:var(--card);border:1px solid var(--borde);border-radius:8px;padding:10px;color:var(--texto);font-size:14px;">
-              <div id="inp_otro_error" style="font-size:12px;color:#e74c3c;margin-top:4px;display:none;">El monto debe ser entre ${fCRC(Math.round(total*0.5))} y ${fCRC(total)}.</div>
+              <div id="inp_otro_error" style="font-size:12px;color:var(--rojo);margin-top:4px;display:none;">El monto debe ser entre ${fCRC(Math.round(total*0.5))} y ${fCRC(total)}.</div>
             </div>
           </div>
         </div>
@@ -542,15 +607,26 @@ function iniciar(payload) {
     } else {
       resumenHTML = `
       <div style="margin-top:20px;text-align:center;">
-        <button class="btn btn-wa" disabled style="opacity:0.45;cursor:not-allowed;pointer-events:none;">
+        <button class="btn btn-wa" disabled style="opacity:0.8;cursor:not-allowed;pointer-events:none;">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
           Confirmar y enviar al taller
         </button>
-        <p style="font-size:13px;color:#6b7280;margin-top:8px;">Seleccioná al menos un repuesto para enviar</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:8px;">Seleccioná al menos un repuesto para enviar</p>
       </div>`;
     }
 
-    document.getElementById('appRoot').innerHTML = hero + instrucciones + repsHTML + resumenHTML + pagoHTML;
+    const consultaMsg = folio
+      ? `Hola, tengo una consulta sobre mi cotización ${folio}`
+      : `Hola, tengo una consulta sobre mi cotización a nombre de ${cliente.nombre}`;
+    const consultaWa = 'https://wa.me/50683439257?text=' + encodeURIComponent(consultaMsg);
+    const footer = `
+    <div style="border-top:1px solid var(--borde);margin-top:24px;padding-top:22px;text-align:center;">
+      <div style="font-size:15px;font-weight:700;color:var(--texto);">¿Tenés dudas sobre tu cotización?</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">Escribinos y con gusto te ayudamos.</div>
+      <div style="margin-top:14px;"><a href="${consultaWa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:11px 20px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Escribir al taller</a></div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:16px;">Taller Ramos y Ramos · San José, Costa Rica</div>
+    </div>`;
+    document.getElementById('appRoot').innerHTML = hero + instrucciones + repsHTML + resumenHTML + pagoHTML + footer;
   }
 
   window.seleccionar = function(ri, oi) {
@@ -586,16 +662,16 @@ function iniciar(payload) {
     overlay.id = 'confirmModal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
     overlay.innerHTML = `
-      <div id="modalContent" style="background:#1c1c1c;border:1px solid #444;border-radius:12px;padding:24px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
-        <div style="font-weight:600;font-size:17px;color:#f0f0f0;margin-bottom:14px;">Repuestos sin seleccionar</div>
-        <p style="font-size:14px;color:#9ca3af;margin-bottom:12px;line-height:1.5;">Los siguientes repuestos no fueron seleccionados y se tomarán como rechazados:</p>
-        <ul style="padding-left:20px;color:#d1d5db;line-height:1.8;margin:0 0 4px;">
+      <div id="modalContent" style="background:var(--card);border:1px solid var(--borde);border-radius:12px;padding:24px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
+        <div style="font-weight:600;font-size:17px;color:var(--texto);margin-bottom:14px;">Repuestos sin seleccionar</div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Los siguientes repuestos no fueron seleccionados y se tomarán como rechazados:</p>
+        <ul style="padding-left:20px;color:var(--texto);line-height:1.8;margin:0 0 4px;">
           ${unmarked.map(n => `<li>${esc(n)}</li>`).join('')}
         </ul>
-        <p style="margin-top:18px;font-weight:500;color:#f0f0f0;font-size:15px;">¿Confirmar y enviar?</p>
+        <p style="margin-top:18px;font-weight:500;color:var(--texto);font-size:15px;">¿Confirmar y enviar?</p>
         <div id="modalBtnRow" style="margin-top:22px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
-          <button id="btnModalVolver" style="background:#374151;color:#f0f0f0;padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;min-width:100px;">Volver</button>
-          <button id="btnModalConfirmar" style="background:#CC0000;color:#fff;padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:600;min-width:140px;">Confirmar y enviar</button>
+          <button id="btnModalVolver" style="background:var(--card2);color:var(--texto);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;min-width:100px;">Volver</button>
+          <button id="btnModalConfirmar" style="background:var(--rojo);color:var(--card);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:600;min-width:140px;">Confirmar y enviar</button>
         </div>
       </div>`;
 
@@ -620,13 +696,13 @@ function iniciar(payload) {
     modal.id = 'modalInstalacion';
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;';
     modal.innerHTML = `
-      <div style="background:#1c1c1c;border:1px solid #444;border-radius:16px;padding:28px;max-width:400px;width:100%;text-align:center;">
+      <div style="background:var(--card);border:1px solid var(--borde);border-radius:16px;padding:28px;max-width:400px;width:100%;text-align:center;">
         <div style="font-size:2rem;margin-bottom:12px;">🔧</div>
-        <div style="font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:1.5px;color:#CC0000;margin-bottom:10px;">Mano de obra</div>
-        <p style="font-size:14px;color:#ccc;line-height:1.6;margin-bottom:24px;">¿Deseás agregar el costo de mano de obra a la proforma oficial?</p>
+        <div style="font-family:'Titillium Web',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:10px;">Mano de obra</div>
+        <p style="font-size:14px;color:var(--texto);line-height:1.6;margin-bottom:24px;">¿Deseás agregar el costo de mano de obra a la proforma oficial?</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <button onclick="procesarAprobacion(true)" style="background:#CC0000;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">Sí, incluir instalación</button>
-          <button onclick="procesarAprobacion(false)" style="background:#222;color:#ccc;border:1px solid #444;border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">No, solo los repuestos</button>
+          <button onclick="procesarAprobacion(true)" style="background:var(--rojo);color:var(--card);border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">Sí, incluir instalación</button>
+          <button onclick="procesarAprobacion(false)" style="background:var(--card2);color:var(--texto);border:1px solid var(--borde);border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">No, solo los repuestos</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
@@ -722,8 +798,8 @@ function iniciar(payload) {
       }).catch(() => {});
 
       if (status) status.innerHTML = `
-        <p style="color:#2ecc71;font-size:13px;margin-bottom:10px;">✅ ¡Selección confirmada!</p>
-        <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:14px;font-size:13px;color:#fbbf24;text-align:left;line-height:1.6;">
+        <p style="color:var(--success);font-size:13px;margin-bottom:10px;">✅ ¡Selección confirmada!</p>
+        <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:10px;padding:14px;font-size:13px;color:var(--warn);text-align:left;line-height:1.6;">
           💳 <strong>Recordá que el adelanto del 50% es requisito para realizar el pedido.</strong><br>
           Por favor enviá el comprobante de pago al taller por WhatsApp para confirmar tu pedido.
         </div>`;
@@ -752,7 +828,7 @@ function iniciar(payload) {
         window.open(waUrl, '_blank');
       }
     } catch(e) {
-      if (status) status.innerHTML = `<p style="color:#e74c3c;font-size:13px;">⚠️ Error al guardar: ${esc(e.message)}</p>`;
+      if (status) status.innerHTML = `<p style="color:var(--rojo);font-size:13px;">⚠️ Error al guardar: ${esc(e.message)}</p>`;
       if (btn) btn.disabled = false;
       if (waWin) waWin.close();
     }
