@@ -44,9 +44,13 @@
     body { font-family: 'Titillium Web', sans-serif; background: var(--fondo); color: var(--texto); min-height: 100vh; }
 
     .header {
-      background: var(--card); border-bottom: 3px solid var(--rojo);
+      background: var(--card);
       padding: 16px 24px; display: flex; align-items: center; gap: 14px;
       position: sticky; top: 0; z-index: 100;
+    }
+    .header::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+      height: 3px; background: linear-gradient(90deg, var(--navy), var(--rojo) 55%, transparent);
     }
     .logo {
       width: 44px; height: 44px;
