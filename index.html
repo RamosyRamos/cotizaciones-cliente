@@ -382,7 +382,7 @@ function mostrarYaAprobado(row) {
       e.preventDefault();
       const cN = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || 'Cliente';
       const veh = [row.vehiculos?.patente, row.vehiculos?.modelo, row.vehiculos?.anio].filter(Boolean).join(' · ') || row.cliente_vehiculo || '';
-      const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/c/${row.id}`;
+      const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
       const mensaje = `🔄 *Solicitud de modificación*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nNecesito hacer cambios en mi selección antes del pedido.`;
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
