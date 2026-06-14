@@ -73,8 +73,17 @@
     .mf{display:inline-block;width:16px;height:11px;border-radius:1.5px;overflow:hidden;border:.5px solid rgba(0,0,0,.12);vertical-align:-1px;position:relative}
     .mf.us{background:repeating-linear-gradient(#b22234 0 1.57px,#fff 1.57px 3.14px)}
     .mf.us::after{content:'';position:absolute;top:0;left:0;width:42%;height:55%;background:#3c3b6e}
-    .mf.eu{background:#003399;display:inline-flex;align-items:center;justify-content:center;color:#FFCC00;font-size:7px;line-height:1}
-    .mf.eu::after{content:'★'}
+    .mf.eu{background:
+      radial-gradient(circle 0.8px at 50% 16%, #FFCC00 97%, transparent 100%),
+      radial-gradient(circle 0.8px at 74% 27%, #FFCC00 97%, transparent 100%),
+      radial-gradient(circle 0.8px at 83% 50%, #FFCC00 97%, transparent 100%),
+      radial-gradient(circle 0.8px at 74% 73%, #FFCC00 97%, transparent 100%),
+      radial-gradient(circle 0.8px at 50% 84%, #FFCC00 97%, transparent 100%),
+      radial-gradient(circle 0.8px at 26% 73%, #FFCC00 97%, transparent 100%),
+      radial-gradient(circle 0.8px at 17% 50%, #FFCC00 97%, transparent 100%),
+      radial-gradient(circle 0.8px at 26% 27%, #FFCC00 97%, transparent 100%),
+      #003399}
+    .mf.eu::after{content:''}
 
     .cliente-hero {
       background: var(--card);
