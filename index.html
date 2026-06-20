@@ -333,6 +333,7 @@ async function cargar() {
         anio: row.vehiculos?.anio || '',
         color: row.vehiculos?.color || '',
         createdAt: row.created_at || '',
+        fechaCotizacion: row.estado_changed_at || row.created_at || '',
         estado: row.estado || '',
         tieneVehiculo: !!row.vehiculos,
       },
@@ -410,8 +411,8 @@ cargar();
 function iniciar(payload) {
   const { taller, cliente, repuestos: reps } = payload;
   // Cotización vencida: 'cotizado' + created_at con más de 30 días. Bloquea la aprobación (no toca la vista "ya aprobada").
-  const vencida = !!cliente.createdAt
-    && (new Date(cliente.createdAt).getTime() + 30*24*60*60*1000) < Date.now()
+  const vencida = !!cliente.fechaCotizacion
+    && (new Date(cliente.fechaCotizacion).getTime() + 30*24*60*60*1000) < Date.now()
     && cliente.estado === 'cotizado';
   const bannerVencida = `
     <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:14px;padding:20px;margin-bottom:20px;">
@@ -527,8 +528,8 @@ function iniciar(payload) {
   function render() {
     const tieneVeh = cliente.tieneVehiculo;
     const modeloLinea = [cliente.modelo, cliente.version].filter(Boolean).join(' · ');
-    const fechaCot = cliente.createdAt
-      ? new Date(cliente.createdAt).toLocaleDateString('es-CR', { day: 'numeric', month: 'long' })
+    const fechaCot = cliente.fechaCotizacion
+      ? new Date(cliente.fechaCotizacion).toLocaleDateString('es-CR', { day: 'numeric', month: 'long' })
       : '';
     const folio = folioNum(cliente.orden);
     const folioBlock = folio
