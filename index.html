@@ -60,6 +60,18 @@
     }
     .header h1 { font-family: 'Titillium Web', sans-serif; font-size: 24px; letter-spacing: 2px; line-height: 1; color: var(--texto); }
     .header p { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+    .vip-badge {
+      display: none;
+      margin-top: 8px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #C9A24B, #E0C476);
+      color: #1a1205;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
 
     .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 80px; }
 
@@ -221,6 +233,7 @@
   <div>
     <h1>Taller Ramos y Ramos</h1>
     <p id="headerSub">Tu cotización personalizada</p>
+    <div id="vipBadge" class="vip-badge">★ Precio VIP / Al costo</div>
   </div>
 </div>
 
@@ -285,6 +298,7 @@ async function cargar() {
     const rows = await res.json();
     const row = rows[0];
     if (!row) { showError('Cotización no encontrada.'); return; }
+    if (row.es_vip) document.getElementById('vipBadge').style.display = 'inline-block';
 
     // Loguear apertura del cliente (fire-and-forget, no bloquea el render)
     fetch(`${SUPABASE_URL}/rest/v1/rpc/registrar_vista_cotizacion`, {
