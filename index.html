@@ -540,7 +540,7 @@ function iniciar(payload) {
     const vehBlock = tieneVeh
       ? `<div style="font-family:'Cormorant',serif;font-size:22px;font-weight:600;color:var(--dim);${folio ? 'margin-top:8px;' : ''}line-height:1.15;">Mercedes-Benz</div>
       ${modeloLinea ? `<div style="font-family:'Cormorant',serif;font-size:30px;font-weight:500;color:var(--texto);line-height:1.15;">${esc(modeloLinea)}</div>` : ''}
-      <div style="display:flex;justify-content:center;align-items:flex-end;gap:12px;margin-top:16px;flex-wrap:wrap;">${placaHTML(cliente.patente)}</div>
+      <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:12px;margin-top:16px;flex-wrap:wrap;">${placaHTML(cliente.patente)}</div>
       ${cliente.vin ? `<div style="margin-top:14px;font-family:'Titillium Web',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);">VIN · <span style="color:var(--dim);font-weight:600;letter-spacing:0.5px;">${esc(cliente.vin)}</span></div>` : ''}
       ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--success);flex-shrink:0;"></span><span>Cotización del <b style="color:var(--dim);font-weight:700;">${esc(fechaCot)}</b> · válida por <b style="color:var(--dim);font-weight:700;">30 días</b></span></div>` : ''}`
       : '';
