@@ -529,7 +529,7 @@ function iniciar(payload) {
 
   function render() {
     const tieneVeh = cliente.tieneVehiculo;
-    const modeloNombre = (cliente.modelo || '').split('(')[0].trim();
+    const modeloNombre = (cliente.modelo || '').replace(/\s*\d{4}\s*[-–]\s*(\d{4}|presente|present|actual|hoy)?\s*$/i, '').trim();
     const modeloLinea = [modeloNombre, cliente.version, cliente.anio].filter(Boolean).join(' · ');
     const fechaCot = cliente.fechaCotizacion
       ? new Date(cliente.fechaCotizacion).toLocaleDateString('es-CR', { day: 'numeric', month: 'long' })
