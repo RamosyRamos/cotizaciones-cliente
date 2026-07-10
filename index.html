@@ -373,26 +373,66 @@ function mostrarYaAprobado(row) {
   const fecha = row.cliente_aprobado_at
     ? new Date(row.cliente_aprobado_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
     : '';
-  document.getElementById('appRoot').innerHTML = `
+  const estado = row.estado || '';
+  // Los _calc se limpian cuando la cotización avanza; leer el canónico primero.
+  const total = Number(row.total_aprobado ?? row.total_aprobado_calc ?? 0);
+  const adelanto = Number(row.adelanto_requerido_calc ?? Math.round(total * 0.5));
+  // Solo en 'aprobado' el cliente aún debe el adelanto → mostrar cuentas.
+  // En 'en_camino'/'cobrado'/etc. el pago ya se coordinó → seguimiento.
+  const pendienteAdelanto = estado === 'aprobado';
+
+  const heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
       <div style="font-size:3rem;margin-bottom:12px;">✅</div>
-      <h2>¡Cotización ya aprobada!</h2>
+      <h2>¡Cotización aprobada!</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fecha ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Aprobada el ${esc(fecha)}</p>` : ''}
-    </div>
-    <div class="card" style="text-align:center;color:var(--muted);padding:24px;">
-      <p>Tu selección ya fue registrada. El taller se pondrá en contacto con vos para coordinar el pago y la entrega.</p>
-      <p style="margin-top:12px;font-size:13px;">Si tenés alguna consulta, contactanos por WhatsApp al <strong style="color:var(--texto);">8887-2667</strong>.</p>
-    </div>
+    </div>`;
+
+  let cuerpoHTML;
+  if (pendienteAdelanto) {
+    const resumenHTML = total > 0 ? `
+      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
+        <div style="text-align:center;color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px;">
+          Tu selección quedó registrada. Para <strong style="color:var(--texto);">iniciar el pedido</strong>, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:130px;background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Total aprobado</div>
+            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--texto);">${fCRC(total)}</div>
+          </div>
+          <div style="flex:1;min-width:130px;background:rgba(200,40,40,0.08);border:1px solid var(--rojo);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:var(--rojo);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">Adelanto requerido 50%</div>
+            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--rojo);font-weight:700;">${fCRC(adelanto)}</div>
+          </div>
+        </div>
+      </div>` : `
+      <div class="card" style="text-align:center;color:var(--muted);padding:24px;">
+        <p>Tu selección ya fue registrada. Para iniciar el pedido, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.</p>
+      </div>`;
+    cuerpoHTML = resumenHTML + cuentasBancariasHTML();
+  } else {
+    cuerpoHTML = `
+      <div class="card" style="text-align:center;color:var(--muted);padding:24px;">
+        <p>Tu pedido está en proceso. El taller se pondrá en contacto con vos para coordinar la entrega.</p>
+        <p style="margin-top:12px;font-size:13px;">Si tenés alguna consulta, contactanos por WhatsApp al <strong style="color:var(--texto);">8887-2667</strong>.</p>
+      </div>`;
+  }
+
+  const contactoHTML = `
     <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
-        Si necesitás modificar tu selección, contactanos. El taller puede reabrir tu cotización para que la apruebes nuevamente.
+        ${pendienteAdelanto
+          ? 'Si necesitás modificar tu selección, contactanos. El taller puede reabrir tu cotización para que la apruebes nuevamente.'
+          : '¿Tenés dudas sobre tu pedido? Escribinos y con gusto te ayudamos.'}
       </div>
       <a href="#" id="btnContactarTaller"
          style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--navy);color:var(--card);border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">
-        📞 Necesito modificar mi selección
+        ${pendienteAdelanto ? '📞 Necesito modificar mi selección' : '💬 Consultar por WhatsApp'}
       </a>
     </div>`;
+
+  document.getElementById('appRoot').innerHTML = heroHTML + cuerpoHTML + contactoHTML;
 
   setTimeout(() => {
     const btn = document.getElementById('btnContactarTaller');
@@ -402,7 +442,9 @@ function mostrarYaAprobado(row) {
       const cN = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || 'Cliente';
       const veh = [row.vehiculos?.patente, row.vehiculos?.modelo, row.vehiculos?.anio].filter(Boolean).join(' · ') || row.cliente_vehiculo || '';
       const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
-      const mensaje = `🔄 *Solicitud de modificación*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nNecesito hacer cambios en mi selección antes del pedido.`;
+      const mensaje = pendienteAdelanto
+        ? `🔄 *Solicitud de modificación*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nNecesito hacer cambios en mi selección antes del pedido.`
+        : `💬 *Consulta sobre mi pedido*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}`;
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
   }, 0);
@@ -410,24 +452,11 @@ function mostrarYaAprobado(row) {
 
 cargar();
 
-function iniciar(payload) {
-  const { taller, cliente, repuestos: reps, imagenesCliente } = payload;
-  // Cotización vencida: 'cotizado' + created_at con más de 30 días. Bloquea la aprobación (no toca la vista "ya aprobada").
-  const vencida = !!cliente.fechaCotizacion
-    && (new Date(cliente.fechaCotizacion).getTime() + 30*24*60*60*1000) < Date.now()
-    && cliente.estado === 'cotizado';
-  const bannerVencida = `
-    <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:14px;padding:20px;margin-bottom:20px;">
-      <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1px;color:var(--warn);font-weight:700;text-transform:uppercase;margin-bottom:8px;">⏳ Cotización vencida</div>
-      <div style="font-size:14px;color:var(--texto);line-height:1.55;">Esta cotización venció. Los precios pueden haber cambiado. Escribinos para pedir una cotización actualizada.</div>
-    </div>`;
-  const _headerSub = document.getElementById('headerSub');
-  if (_headerSub && cliente.nombre) _headerSub.textContent = 'Cotización confeccionada para ' + cliente.nombre;
-  const _folio = folioNum(cliente.orden);
-  document.title = (_folio ? _folio + ' · ' : '') + (cliente.nombre || 'Tu cotización') + ' – Taller Ramos y Ramos';
-  const sel = new Array(reps.length).fill(null);
-
-  const pagoHTML = `
+// Bloque de cuentas bancarias + tiempos de entrega. Estático (solo usa
+// copiarTexto, que es global). Reutilizado por iniciar() (antes de aprobar)
+// y por mostrarYaAprobado() en estado 'aprobado' (para pagar el adelanto).
+function cuentasBancariasHTML() {
+  return `
   <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:20px;">
     <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
       <span style="display:inline-block;width:3px;height:16px;background:var(--rojo);border-radius:2px;"></span>
@@ -495,6 +524,26 @@ function iniciar(payload) {
       </div>
     </div>
   </div>`;
+}
+
+function iniciar(payload) {
+  const { taller, cliente, repuestos: reps, imagenesCliente } = payload;
+  // Cotización vencida: 'cotizado' + created_at con más de 30 días. Bloquea la aprobación (no toca la vista "ya aprobada").
+  const vencida = !!cliente.fechaCotizacion
+    && (new Date(cliente.fechaCotizacion).getTime() + 30*24*60*60*1000) < Date.now()
+    && cliente.estado === 'cotizado';
+  const bannerVencida = `
+    <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:14px;padding:20px;margin-bottom:20px;">
+      <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1px;color:var(--warn);font-weight:700;text-transform:uppercase;margin-bottom:8px;">⏳ Cotización vencida</div>
+      <div style="font-size:14px;color:var(--texto);line-height:1.55;">Esta cotización venció. Los precios pueden haber cambiado. Escribinos para pedir una cotización actualizada.</div>
+    </div>`;
+  const _headerSub = document.getElementById('headerSub');
+  if (_headerSub && cliente.nombre) _headerSub.textContent = 'Cotización confeccionada para ' + cliente.nombre;
+  const _folio = folioNum(cliente.orden);
+  document.title = (_folio ? _folio + ' · ' : '') + (cliente.nombre || 'Tu cotización') + ' – Taller Ramos y Ramos';
+  const sel = new Array(reps.length).fill(null);
+
+  const pagoHTML = cuentasBancariasHTML();
 
   function placaHTML(patente) {
     const p = (patente || '').trim();
