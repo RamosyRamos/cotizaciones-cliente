@@ -384,6 +384,44 @@ function mostrarYaAprobado(row) {
   // En 'en_camino'/'cobrado'/etc. el pago ya se coordinó → seguimiento.
   const pendienteAdelanto = estado === 'aprobado';
 
+  // Selección aprobada, reconstruida de cliente_seleccion + repuestos (null-safe:
+  // el camino manual puede dejar entradas null en el array).
+  const aprobadosSel = (Array.isArray(row.cliente_seleccion) ? row.cliente_seleccion : [])
+    .filter(s => s && s.rejected === false)
+    .map(s => {
+      const rep = (row.repuestos || [])[s.repuesto_idx];
+      const op = rep && Array.isArray(rep.opciones) ? rep.opciones[s.opcion_idx] : null;
+      return rep ? { rep, op } : null;
+    })
+    .filter(Boolean);
+
+  const seleccionHTML = pendienteAdelanto && aprobadosSel.length > 0 ? `
+    <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
+      <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">Resumen de tu pedido</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${aprobadosSel.map(({ rep, op }) => `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
+            <div style="color:var(--texto);">
+              ${esc(rep.nombre || '')}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
+              ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
+            </div>
+            ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
+          </div>`).join('')}
+      </div>
+      ${row.con_instalacion != null ? `
+      <div style="font-size:12.5px;color:var(--muted);margin-top:10px;">${row.con_instalacion ? '🔧 Con instalación en el taller' : 'Solo repuestos'}</div>` : ''}
+    </div>` : '';
+
+  // Botón "enviar comprobante" (solo casos con pago pendiente A1/A2) — gesto
+  // directo del usuario, sin el pre-open de iOS que usaba el WA automático.
+  const btnComprobanteHTML = `
+    <div style="text-align:center;margin-top:16px;">
+      <a href="#" id="btnComprobante"
+         style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+        📎 Enviar comprobante de pago
+      </a>
+    </div>`;
+
   const heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
       <div style="font-size:3rem;margin-bottom:12px;">✅</div>
@@ -430,7 +468,7 @@ function mostrarYaAprobado(row) {
       <div class="card" style="text-align:center;color:var(--muted);padding:24px;">
         <p>Tu selección ya fue registrada. Para iniciar el pedido, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.</p>
       </div>`;
-    cuerpoHTML = resumenHTML + cuentasBancariasHTML();
+    cuerpoHTML = seleccionHTML + resumenHTML + cuentasBancariasHTML() + btnComprobanteHTML;
   } else if (pendienteAdelanto && faltaAdelanto > 0) {
     // A2 — adelanto parcial: mostrar lo abonado, lo que falta, y las cuentas.
     cuerpoHTML = `
@@ -443,10 +481,11 @@ function mostrarYaAprobado(row) {
           ${cajaRoja('Falta del adelanto', faltaAdelanto)}
         </div>
         ${lineaSaldo}
-      </div>` + cuentasBancariasHTML();
+      </div>` + cuentasBancariasHTML() + btnComprobanteHTML;
+    cuerpoHTML = seleccionHTML + cuerpoHTML;
   } else if (pendienteAdelanto) {
     // A3 — adelanto cubierto o superado: sin cuentas, confirmación tranquilizadora.
-    cuerpoHTML = `
+    cuerpoHTML = seleccionHTML + `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
         <div style="background:color-mix(in srgb, var(--success) 10%, transparent);border:1px solid var(--success);border-radius:12px;padding:18px;text-align:center;">
           <div style="font-size:16px;font-weight:700;color:var(--success);">✓ Adelanto cubierto</div>
@@ -489,17 +528,30 @@ function mostrarYaAprobado(row) {
   document.getElementById('appRoot').innerHTML = heroHTML + cuerpoHTML + contactoHTML;
 
   setTimeout(() => {
+    const cN = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || 'Cliente';
+    const veh = [row.vehiculos?.patente, row.vehiculos?.modelo, row.vehiculos?.anio].filter(Boolean).join(' · ') || row.cliente_vehiculo || '';
+
     const btn = document.getElementById('btnContactarTaller');
-    if (!btn) return;
-    btn.addEventListener('click', function(e) {
+    if (btn) btn.addEventListener('click', function(e) {
       e.preventDefault();
-      const cN = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || 'Cliente';
-      const veh = [row.vehiculos?.patente, row.vehiculos?.modelo, row.vehiculos?.anio].filter(Boolean).join(' · ') || row.cliente_vehiculo || '';
       const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
       const mensaje = pendienteAdelanto
         ? `🔄 *Solicitud de modificación*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nNecesito hacer cambios en mi selección antes del pedido.`
         : `💬 *Consulta sobre mi pedido*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}`;
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
+    });
+
+    const PAGO_LABELS = { adelanto: 'adelanto 50%', total: 'pago total', otro: 'monto personalizado' };
+    const btnC = document.getElementById('btnComprobante');
+    if (btnC) btnC.addEventListener('click', function(e) {
+      e.preventDefault();
+      let m = `📎 *Comprobante de pago – Cotización*\n👤 Cliente: ${cN}`;
+      if (veh) m += `\n🚗 Vehículo: ${veh}`;
+      m += `\n💰 Total aprobado: ${fCRC(total)}`;
+      if (row.monto_pago_elegido != null) m += `\n💵 Monto a pagar: ${fCRC(row.monto_pago_elegido)}${row.pago_elegido ? ` (${PAGO_LABELS[row.pago_elegido] || row.pago_elegido})` : ''}`;
+      if (row.con_instalacion != null) m += `\n🔧 Instalación: ${row.con_instalacion ? 'Sí' : 'No'}`;
+      m += `\n\nAdjunto el comprobante de la transferencia.`;
+      window.open(`https://wa.me/50688872667?text=${encodeURIComponent(m)}`, '_blank');
     });
   }, 0);
 }
@@ -909,15 +961,10 @@ function iniciar(payload) {
       }
       montoPago = inp;
     }
-    const labelPago = optPago === 'total' ? 'Pago total' : optPago === 'otro' ? 'Monto personalizado' : 'Adelanto mínimo (50%)';
-
     const btn = document.getElementById('btnConfirmar');
     const status = document.getElementById('confirmStatus');
     if (btn) btn.disabled = true;
     if (status) status.innerHTML = `<p style="color:var(--muted);font-size:13px;">⏳ Guardando tu selección...</p>`;
-
-    // Open WA window before any await (iOS Safari requirement)
-    const waWin = window.open('', '_blank');
 
     try {
       const clienteSeleccion = sel.map((oi, ri) => {
@@ -935,7 +982,6 @@ function iniciar(payload) {
           const [fresh] = await chkRes.json();
           if (fresh && (fresh.cliente_aprobado_at || ALREADY_APPROVED.includes(fresh.estado))) {
             if (btn) btn.disabled = false;
-            if (waWin) waWin.close();
             alert('Esta cotización ya fue aprobada. Recargá la página para ver el estado actualizado.');
             window.location.reload();
             return;
@@ -961,6 +1007,9 @@ function iniciar(payload) {
             total_aprobado_calc: total,
             total_aprobado: total,
             estado: 'aprobado',
+            con_instalacion: conInstalacion,
+            pago_elegido: optPago,
+            monto_pago_elegido: montoPago,
           }),
         }
       );
@@ -979,40 +1028,24 @@ function iniciar(payload) {
         }),
       }).catch(() => {});
 
-      if (status) status.innerHTML = `
-        <p style="color:var(--success);font-size:13px;margin-bottom:10px;">✅ ¡Selección confirmada!</p>
-        <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:10px;padding:14px;font-size:13px;color:var(--warn);text-align:left;line-height:1.6;">
-          💳 <strong>Recordá que el adelanto del 50% es requisito para realizar el pedido.</strong><br>
-          Por favor enviá el comprobante de pago al taller por WhatsApp para confirmar tu pedido.
-        </div>`;
-
-      // WhatsApp message — only sent after successful save
-      let msg = `✅ *Aprobación de cotización – Taller Ramos y Ramos*\n`;
-      msg += `📋 N°: ${cliente.orden || '—'}\n`;
-      msg += `👤 Cliente: ${cliente.nombre}\n`;
-      if (cliente.vehiculo) msg += `🚗 Vehículo: ${cliente.vehiculo}\n`;
-      msg += `\n*Repuestos aprobados:*\n`;
-      aprobados.forEach(({r, oi}) => {
-        const op = r.opciones[oi];
-        msg += `• ${r.nombre}${r.cantidad > 1 ? ' (×' + r.cantidad + ')' : ''}\n`;
-        msg += `  → ${op.calidad} / ${op.estado}${op.marca ? ' · ' + op.marca : ''}\n`;
-        if (op.garantia) msg += `  → 🛡️ ${op.garantia}\n`;
-        msg += `  → ${fCRC(op.precioFinalCRC)}\n`;
-      });
-      msg += `\n💰 *Total aprobado: ${fCRC(total)}*\n`;
-      msg += `💵 Monto a pagar (${labelPago}): ${fCRC(montoPago)}\n`;
-      msg += `🔧 Instalación: ${conInstalacion ? 'Sí, incluir instalación' : 'No'}\n`;
-      msg += `\n_Enviado desde el formulario de aprobación Taller Ramos y Ramos_`;
-      const waUrl = 'https://wa.me/50688872667?text=' + encodeURIComponent(msg);
-      if (waWin) {
-        waWin.location.href = waUrl;
-      } else {
-        window.open(waUrl, '_blank');
+      // Transición a la pantalla de aprobado con el row fresco (trae los
+      // campos recién escritos + joins de clientes/vehiculos). El comprobante
+      // por WhatsApp ahora es un botón de esa pantalla — sin WA automático.
+      try {
+        const rres = await fetch(
+          `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}&select=*,clientes(nombre,apellido),vehiculos(patente,modelo,anio,marca,version,color,vin)`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+        );
+        const [rrow] = await rres.json();
+        if (!rrow) throw new Error('sin fila');
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        mostrarYaAprobado(rrow);
+      } catch(_) {
+        window.location.reload();  // cargar() bifurca solo a la pantalla de aprobado
       }
     } catch(e) {
       if (status) status.innerHTML = `<p style="color:var(--rojo);font-size:13px;">⚠️ Error al guardar: ${esc(e.message)}</p>`;
       if (btn) btn.disabled = false;
-      if (waWin) waWin.close();
     }
   };
 
