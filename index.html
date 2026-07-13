@@ -881,8 +881,12 @@ function iniciar(payload) {
         <div style="display:flex;flex-direction:column;gap:10px;">
           <button onclick="procesarAprobacion(true)" style="background:var(--rojo);color:var(--card);border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">Sí, incluir instalación</button>
           <button onclick="procesarAprobacion(false)" style="background:var(--card2);color:var(--texto);border:1px solid var(--borde);border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">No, solo los repuestos</button>
+          <button onclick="document.getElementById('modalInstalacion').remove()" style="background:transparent;color:var(--muted);border:none;border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">← Volver</button>
         </div>
       </div>`;
+    // Cerrar tocando el fondo: solo si el tap fue en el overlay mismo,
+    // no dentro de la tarjeta (los clicks internos no burbujean como e.target=modal).
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
   };
 
