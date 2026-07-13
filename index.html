@@ -199,6 +199,10 @@
     .btn-wa { background: #25D366; color: #fff; }
     .btn-wa:hover { filter: brightness(1.12); }
     .btn-wa:disabled { background: var(--muted); color: var(--card); filter: none; cursor: not-allowed; }
+    /* Confirmar selección: ya no abre WhatsApp — navy propio, no reusar .btn-wa */
+    .btn-navy { background: var(--navy); color: #fff; }
+    .btn-navy:hover { filter: brightness(1.3); }
+    .btn-navy:disabled { background: var(--muted); color: var(--card); filter: none; cursor: not-allowed; }
 
     .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
@@ -418,7 +422,7 @@ function mostrarYaAprobado(row) {
     <div style="text-align:center;margin-top:16px;">
       <a href="#" id="btnComprobante"
          style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
-        📎 Enviar comprobante de pago
+        Enviar comprobante de pago
       </a>
     </div>`;
 
@@ -545,13 +549,41 @@ function mostrarYaAprobado(row) {
     const btnC = document.getElementById('btnComprobante');
     if (btnC) btnC.addEventListener('click', function(e) {
       e.preventDefault();
-      let m = `📎 *Comprobante de pago – Cotización*\n👤 Cliente: ${cN}`;
-      if (veh) m += `\n🚗 Vehículo: ${veh}`;
-      m += `\n💰 Total aprobado: ${fCRC(total)}`;
-      if (row.monto_pago_elegido != null) m += `\n💵 Monto a pagar: ${fCRC(row.monto_pago_elegido)}${row.pago_elegido ? ` (${PAGO_LABELS[row.pago_elegido] || row.pago_elegido})` : ''}`;
-      if (row.con_instalacion != null) m += `\n🔧 Instalación: ${row.con_instalacion ? 'Sí' : 'No'}`;
-      m += `\n\nAdjunto el comprobante de la transferencia.`;
-      window.open(`https://wa.me/50688872667?text=${encodeURIComponent(m)}`, '_blank');
+      // Resumen completo (el que mandaba el WA automático pre-ea92dd6),
+      // reconstruido de aprobadosSel. Históricas: sin selección/decisión → se
+      // omiten esas líneas y queda el resumen corto de siempre.
+      const lineas = aprobadosSel.map(({ rep, op }) => {
+        let l = `• ${rep.nombre || 'Repuesto'}${(rep.cantidad || 1) > 1 ? ' (×' + rep.cantidad + ')' : ''}`;
+        if (op) {
+          const specs = [op.calidad, op.estado].filter(Boolean).join(' / ');
+          if (specs || op.marca) l += `\n  → ${specs}${op.marca ? (specs ? ' · ' : '') + op.marca : ''}`;
+          if (op.garantia) l += `\n  → 🛡️ ${op.garantia}`;
+          if (op.precioFinalCRC != null) l += `\n  → ${fCRC(op.precioFinalCRC)}`;
+        }
+        return l;
+      });
+      const armar = (incluidas) => {
+        let m = `✅ *Aprobación de cotización – Taller Ramos y Ramos*\n👤 Cliente: ${cN}`;
+        if (veh) m += `\n🚗 Vehículo: ${veh}`;
+        if (incluidas.length > 0) {
+          m += `\n\n*Repuestos aprobados:*\n${incluidas.join('\n')}`;
+          if (incluidas.length < lineas.length) m += `\n… y ${lineas.length - incluidas.length} más`;
+        }
+        m += `\n\n💰 *Total aprobado: ${fCRC(total)}*`;
+        if (row.monto_pago_elegido != null) m += `\n💵 Monto a pagar: ${fCRC(row.monto_pago_elegido)}${row.pago_elegido ? ` (${PAGO_LABELS[row.pago_elegido] || row.pago_elegido})` : ''}`;
+        if (row.con_instalacion != null) m += `\n🔧 Instalación: ${row.con_instalacion ? 'Sí' : 'No'}`;
+        m += `\n\nAdjunto el comprobante de la transferencia.`;
+        return m;
+      };
+      // wa.me tolera ~2000 chars de URL: truncar la lista ("… y N más")
+      // hasta caber, conservando siempre total/monto/cierre.
+      const incluidas = lineas.slice();
+      let url = `https://wa.me/50688872667?text=${encodeURIComponent(armar(incluidas))}`;
+      while (url.length > 1900 && incluidas.length > 0) {
+        incluidas.pop();
+        url = `https://wa.me/50688872667?text=${encodeURIComponent(armar(incluidas))}`;
+      }
+      window.open(url, '_blank');
     });
   }, 0);
 }
@@ -648,8 +680,6 @@ function iniciar(payload) {
   const _folio = folioNum(cliente.orden);
   document.title = (_folio ? _folio + ' · ' : '') + (cliente.nombre || 'Tu cotización') + ' – Taller Ramos y Ramos';
   const sel = new Array(reps.length).fill(null);
-
-  const pagoHTML = cuentasBancariasHTML();
 
   function placaHTML(patente) {
     const p = (patente || '').trim();
@@ -822,9 +852,8 @@ function iniciar(payload) {
         </div>
 
         <div class="row" style="margin-top:18px;">
-          <button class="btn btn-wa" id="btnConfirmar" onclick="handleSubmitClick()">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
-            Confirmar y enviar al taller
+          <button class="btn btn-navy" id="btnConfirmar" onclick="handleSubmitClick()">
+            Confirmar selección
           </button>
         </div>
         <div id="confirmStatus" style="margin-top:10px;"></div>
@@ -836,11 +865,10 @@ function iniciar(payload) {
     } else {
       resumenHTML = `
       <div style="margin-top:20px;text-align:center;">
-        <button class="btn btn-wa" disabled style="opacity:0.8;cursor:not-allowed;pointer-events:none;">
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
-          Confirmar y enviar al taller
+        <button class="btn btn-navy" disabled style="opacity:0.8;cursor:not-allowed;pointer-events:none;">
+          Confirmar selección
         </button>
-        <p style="font-size:13px;color:var(--muted);margin-top:8px;">Seleccioná al menos un repuesto para enviar</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:8px;">Seleccioná al menos un repuesto para continuar</p>
       </div>`;
     }
 
@@ -855,7 +883,7 @@ function iniciar(payload) {
       <div style="margin-top:14px;"><a href="${consultaWa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:11px 20px;min-height:44px;box-sizing:border-box;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Escribir al taller</a></div>
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:16px;">Taller Ramos y Ramos · San José, Costa Rica</div>
     </div>`;
-    document.getElementById('appRoot').innerHTML = hero + galeriaHTML + (vencida ? bannerVencida : instrucciones) + repsHTML + (vencida ? '' : resumenHTML) + pagoHTML + footer;
+    document.getElementById('appRoot').innerHTML = hero + galeriaHTML + (vencida ? bannerVencida : instrucciones) + repsHTML + (vencida ? '' : resumenHTML) + footer;
   }
 
   window.seleccionar = function(ri, oi) {
