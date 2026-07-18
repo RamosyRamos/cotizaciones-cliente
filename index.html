@@ -331,7 +331,7 @@ async function cargar() {
       cliente: {
         nombre: clienteNombre,
         vehiculo: vehiculoDesc,
-        orden: row.orden_id || '',
+        numero: row.numero || null,
         patente: row.vehiculos?.patente || '',
         modelo: row.vehiculos?.modelo || '',
         version: row.vehiculos?.version || '',
@@ -685,7 +685,7 @@ function iniciar(payload) {
     </div>`;
   const _headerSub = document.getElementById('headerSub');
   if (_headerSub && cliente.nombre) _headerSub.textContent = 'Cotización confeccionada para ' + cliente.nombre;
-  const _folio = folioNum(cliente.orden);
+  const _folio = folioNum(cliente.numero);
   document.title = (_folio ? _folio + ' · ' : '') + (cliente.nombre || 'Tu cotización') + ' – Taller Ramos y Ramos';
   const sel = new Array(reps.length).fill(null);
 
@@ -713,11 +713,8 @@ function iniciar(payload) {
     </span>`;
   }
 
-  function folioNum(orden) {
-    const s = String(orden || '').trim();
-    if (!s.startsWith('INT-#')) return '';   // solo el consecutivo real de la calculadora
-    const n = s.slice(5);                     // quita el prefijo "INT-#"
-    return n ? '#' + n : '';
+  function folioNum(numero) {
+    return numero ? 'COT-' + numero : '';   // consecutivo real (cotizaciones.numero)
   }
 
   function render() {
@@ -727,7 +724,7 @@ function iniciar(payload) {
     const fechaCot = cliente.fechaCotizacion
       ? new Date(cliente.fechaCotizacion).toLocaleDateString('es-CR', { day: 'numeric', month: 'long' })
       : '';
-    const folio = folioNum(cliente.orden);
+    const folio = folioNum(cliente.numero);
     const folioBlock = folio
       ? `<div style="text-align:right;flex-shrink:0;"><div style="font-family:'Titillium Web',sans-serif;font-size:7.5px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:600;">Cotización</div><div style="font-family:'Titillium Web',sans-serif;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:0.5px;">${esc(folio)}</div></div>`
       : '';
