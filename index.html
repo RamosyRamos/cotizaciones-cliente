@@ -277,6 +277,8 @@ function snack(msg, ok=true) {
 // UUID from ?id= (404 redirect) or ?k= (legacy)
 const params = new URLSearchParams(location.search);
 const cotId = params.get('id') || params.get('k');
+// Modo vista previa interna (?preview=1): no registra vista ni permite aprobar
+const isPreview = params.has('preview');
 
 function showError(txt) {
   document.getElementById('appRoot').innerHTML = `
@@ -305,15 +307,17 @@ async function cargar() {
     if (row.es_vip) document.getElementById('vipBadge').style.display = 'inline-block';
 
     // Loguear apertura del cliente (fire-and-forget, no bloquea el render)
-    fetch(`${SUPABASE_URL}/rest/v1/rpc/registrar_vista_cotizacion`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ p_cotizacion_id: cotId })
-    }).catch(() => {});
+    if (!isPreview) {
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/registrar_vista_cotizacion`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_cotizacion_id: cotId })
+      }).catch(() => {});
+    }
 
     if (row.cliente_aprobado_at) {
       mostrarYaAprobado(row);
@@ -857,10 +861,11 @@ function iniciar(payload) {
         </div>
 
         <div class="row" style="margin-top:18px;">
-          <button class="btn btn-navy" id="btnConfirmar" onclick="handleSubmitClick()">
+          <button class="btn btn-navy" id="btnConfirmar" onclick="handleSubmitClick()"${isPreview ? ' disabled style="opacity:0.55;cursor:not-allowed;pointer-events:none;"' : ''}>
             Confirmar selección
           </button>
         </div>
+        ${isPreview ? '<p style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;">👁 Vista previa interna — la aprobación está deshabilitada</p>' : ''}
         <div id="confirmStatus" style="margin-top:10px;"></div>
       </div>`;
 
@@ -976,6 +981,7 @@ function iniciar(payload) {
   };
 
   window.procesarAprobacion = async function(conInstalacion) {
+    if (isPreview) return;  // defensa extra: en preview nunca se aprueba
     document.getElementById('modalInstalacion')?.remove();
     const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi !== null && x.oi >= 0);
     const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precioFinalCRC, 0);
