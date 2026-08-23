@@ -222,6 +222,11 @@
       .btn { width: 100%; justify-content: center; }
       .resumen-total { flex-direction: column; gap: 6px; text-align: center; }
     }
+    /* Seguimiento (en camino / en taller): badge del hero y fila de tiempos que aplica */
+    .badge-estado { display:inline-block; margin-top:12px; padding:5px 12px; border-radius:999px; font-family:'Titillium Web',sans-serif; font-size:12px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--navy); background:var(--card2); border:1px solid var(--borde); }
+    .fila-tiempo { padding:6px 8px; border-radius:8px; border:1px solid transparent; }
+    .fila-tiempo.aplica { border-color:var(--success); background:color-mix(in srgb, var(--success) 8%, transparent); }
+    .fila-tiempo-tag { font-size:10px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:0.6px; margin-left:6px; }
     @media (max-width: 600px) {
       .pago-grid-2col { grid-template-columns: 1fr !important; }
     }
@@ -274,6 +279,31 @@ function snack(msg, ok=true) {
   snack._t = setTimeout(() => { el.className = ''; }, 2400);
 }
 
+// Fechas SIEMPRE en hora de Costa Rica (el navegador del cliente puede estar en
+// otra zona). Un 'YYYY-MM-DD' suelto (columna date, p. ej. fecha_agendado) se
+// arma como fecha civil: new Date('2026-08-25') sería medianoche UTC = el día
+// anterior en CR.
+const TZ_CR = 'America/Costa_Rica';
+function fechaCR(iso, opts = {}) {
+  if (!iso) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
+  const d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)) : new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('es-CR', { timeZone: TZ_CR, day: 'numeric', month: 'long', year: 'numeric', ...opts });
+}
+// Días civiles CR transcurridos desde `iso` hasta hoy (0 = hoy). null si no hay fecha.
+function diasDesde(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  const civil = x => {
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone: TZ_CR, year: 'numeric', month: '2-digit', day: '2-digit' }).format(x);
+    const [y, mo, da] = p.split('-').map(Number);
+    return Date.UTC(y, mo - 1, da);
+  };
+  return Math.max(0, Math.round((civil(new Date()) - civil(d)) / 86400000));
+}
+
 // UUID from ?id= (404 redirect) or ?k= (legacy)
 const params = new URLSearchParams(location.search);
 const cotId = params.get('id') || params.get('k');
@@ -319,7 +349,10 @@ async function cargar() {
       }).catch(() => {});
     }
 
-    if (row.cliente_aprobado_at) {
+    // Pantalla cerrada por sello de aprobación O por estado: una cotización que
+    // el taller aprobó a mano (sin sello) o que ya avanzó no vuelve al selector.
+    const ESTADOS_CERRADOS = ['aprobado','en_camino','listo','agendado','en_taller','cobrado','perdido'];
+    if (row.cliente_aprobado_at || ESTADOS_CERRADOS.includes(row.estado)) {
       mostrarYaAprobado(row);
       return;
     }
@@ -378,10 +411,9 @@ async function cargar() {
 
 function mostrarYaAprobado(row) {
   const clienteNombre = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || '';
-  const fecha = row.cliente_aprobado_at
-    ? new Date(row.cliente_aprobado_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
-    : '';
+  const fecha = fechaCR(row.cliente_aprobado_at);   // '' sin sello (aprobación manual del taller)
   const estado = row.estado || '';
+  const folio = row.numero ? `COT-${String(row.numero).padStart(4, '0')}` : '';
   // Los _calc se limpian cuando la cotización avanza; leer el canónico primero.
   const total = Number(row.total_aprobado ?? row.total_aprobado_calc ?? 0);
   const adelantoReq = Number(row.adelanto_requerido_calc ?? Math.round(total * 0.5));
@@ -431,13 +463,42 @@ function mostrarYaAprobado(row) {
       </a>
     </div>`;
 
-  const heroHTML = `
+  // Hero por defecto (aprobado / rama B); las ramas en_camino y listo ponen el suyo.
+  let heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
       <div style="font-size:3rem;margin-bottom:12px;">✅</div>
       <h2>¡Cotización aprobada!</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fecha ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Aprobada el ${esc(fecha)}</p>` : ''}
     </div>`;
+  // Resumen de lo aprobado, reutilizable por las ramas de seguimiento.
+  const resumenPedidoHTML = aprobadosSel.length > 0 ? `
+    <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
+      <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">Resumen de tu pedido</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${aprobadosSel.map(({ rep, op }) => `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
+            <div style="color:var(--texto);">
+              ${esc(rep.nombre || '')}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
+              ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
+            </div>
+            ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
+          </div>`).join('')}
+      </div>
+      ${row.con_instalacion != null ? `
+      <div style="font-size:12.5px;color:var(--muted);margin-top:10px;">${row.con_instalacion ? '🔧 Con instalación en el taller' : 'Solo repuestos'}</div>` : ''}
+    </div>` : '';
+  // Bloque "ya abonaste" + saldo (rama B y ramas de seguimiento)
+  const abonoHTML = (notaSaldo = '') => adelantoPagado > 0 ? `
+      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          ${cajaVerde('✓ Ya abonaste', adelantoPagado)}
+        </div>
+        ${lineaSaldo}
+        ${saldoTotal > 0 && notaSaldo ? `<div style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:6px;">${notaSaldo}</div>` : ''}
+      </div>` : '';
+  // Orígenes de las opciones aprobadas (para resaltar la fila de tiempos que aplica)
+  const origenesAprobados = [...new Set(aprobadosSel.map(({ op }) => (op?.origen === 'europa' ? 'europa' : 'usa')))];
 
   // Cajas de monto reutilizables (mismo look que cb32bec: flex 1, min-width 130).
   const cajaNeutra = (titulo, monto) => `
@@ -505,6 +566,56 @@ function mostrarYaAprobado(row) {
         </div>
         ${lineaSaldo}
       </div>`;
+  } else if (estado === 'en_camino') {
+    // Rama C — pedido realizado, repuestos en camino.
+    const dias = diasDesde(row.estado_changed_at);
+    const badge = dias == null ? '' : dias === 0 ? 'Hoy' : `${dias} día${dias === 1 ? '' : 's'} en camino`;
+    const fPedido = fechaCR(row.estado_changed_at);
+    heroHTML = `
+    <div class="cliente-hero" style="margin-top:16px;">
+      <div style="font-size:3rem;margin-bottom:12px;">🚚</div>
+      <h2>¡Tu pedido ya fue realizado!</h2>
+      ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
+      ${fPedido ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Pedido realizado el ${esc(fPedido)}</p>` : ''}
+      ${badge ? `<span class="badge-estado">${esc(badge)}</span>` : ''}
+    </div>`;
+    cuerpoHTML = resumenPedidoHTML
+      + tiemposEntregaHTML(origenesAprobados, '🔔 Te avisaremos cuando lleguen al taller.')
+      + abonoHTML();
+  } else if (estado === 'listo' || estado === 'agendado') {
+    // Rama D — repuestos en el taller: cita agendada o coordinar instalación/retiro.
+    // En 'agendado' estado_changed_at es la fecha del agendado, no de la llegada → sin línea.
+    const fLlegada = estado === 'listo' ? fechaCR(row.estado_changed_at) : '';
+    heroHTML = `
+    <div class="cliente-hero" style="margin-top:16px;">
+      <div style="font-size:3rem;margin-bottom:12px;">📦</div>
+      <h2>¡Tus repuestos ya están en el taller!</h2>
+      ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
+      ${fLlegada ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Llegaron el ${esc(fLlegada)}</p>` : ''}
+    </div>`;
+    const retiro = row.con_instalacion === false;
+    let citaHTML;
+    if (row.fecha_agendado) {
+      // fecha_agendado es DATE (sin hora): solo fecha civil CR.
+      citaHTML = `
+      <div style="background:var(--card);border:1px solid var(--success);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
+        <div style="font-size:11px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">📅 Tu cita</div>
+        <div style="font-family:'Titillium Web',sans-serif;font-size:20px;color:var(--texto);text-transform:capitalize;">${esc(fechaCR(row.fecha_agendado, { weekday: 'long' }))}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:8px;">Te esperamos en el taller.</div>
+      </div>`;
+    } else {
+      citaHTML = `
+      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
+        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">${retiro ? 'Podés pasar a retirarlos' : 'Coordinemos la instalación'}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">${retiro ? 'Escribinos para coordinar el día y la hora de retiro.' : 'Escribinos para agendar el día y la hora de la instalación.'}</div>
+        <a href="#" id="btnAgendar"
+           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+          ${retiro ? '💬 Coordinar retiro por WhatsApp' : '📅 Agendar por WhatsApp'}
+        </a>
+      </div>`;
+    }
+    cuerpoHTML = resumenPedidoHTML + citaHTML
+      + abonoHTML(`El saldo se cancela al momento de la ${retiro ? 'entrega' : 'instalación'}.`);
   } else {
     // Rama B — estado posterior a 'aprobado': seguimiento, sin cuentas.
     cuerpoHTML = `
@@ -544,9 +655,22 @@ function mostrarYaAprobado(row) {
     if (btn) btn.addEventListener('click', function(e) {
       e.preventDefault();
       const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
+      const refFolio = folio ? ` ${folio}` : '';
       const mensaje = pendienteAdelanto
         ? `🔄 *Solicitud de modificación*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nNecesito hacer cambios en mi selección antes del pedido.`
-        : `💬 *Consulta sobre mi pedido*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}`;
+        : estado === 'en_camino'
+          ? `💬 *Consulta sobre mi pedido en camino*${refFolio}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nMi pedido está en camino y tengo una consulta.`
+          : `💬 *Consulta sobre mi pedido*${refFolio}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}`;
+      window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
+    });
+
+    // Rama D sin cita: agendar instalación / coordinar retiro (mismo número).
+    const btnA = document.getElementById('btnAgendar');
+    if (btnA) btnA.addEventListener('click', function(e) {
+      e.preventDefault();
+      const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
+      const retiro = row.con_instalacion === false;
+      const mensaje = `${retiro ? '📦 *Retiro de repuestos*' : '📅 *Agendar instalación*'}${folio ? ` ${folio}` : ''}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nMis repuestos ya llegaron, quiero ${retiro ? 'coordinar el retiro' : 'agendar la instalación'}.`;
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
 
@@ -655,23 +779,27 @@ function cuentasBancariasHTML() {
 // Tiempos de entrega como card propia: info de decisión (USA vs Europa) que el
 // cliente necesita ANTES de aprobar — se muestra en la pantalla de selección y
 // también post-aprobación (A1/A2), separada de las instrucciones de pago.
-function tiemposEntregaHTML() {
+// `origenes` (['usa'|'europa']) resalta la(s) fila(s) que aplican al pedido;
+// `pie` reemplaza la nota estática (ramas de seguimiento, donde el IVA y el
+// día de pedido ya no son información de decisión).
+function tiemposEntregaHTML(origenes = null, pie = null) {
+  const fila = (key, cls, txt) => {
+    const on = Array.isArray(origenes) && origenes.includes(key);
+    return `
+      <div class="fila-tiempo${on ? ' aplica' : ''}" style="display:flex;align-items:center;gap:10px;font-size:13px;">
+        <span class="mf ${cls}"></span>
+        <div>${txt}${on ? ' <span class="fila-tiempo-tag">tu pedido</span>' : ''}</div>
+      </div>`;
+  };
   return `
   <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:20px;">
     <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">⏱️ Tiempos estimados de entrega</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
-        <span class="mf us"></span>
-        <div><strong>Estados Unidos</strong> — 7 a 10 días hábiles</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
-        <span class="mf eu"></span>
-        <div><strong>Europa</strong> — 10 a 20 días hábiles</div>
-      </div>
+      ${fila('usa', 'us', '<strong>Estados Unidos</strong> — 7 a 10 días hábiles')}
+      ${fila('europa', 'eu', '<strong>Europa</strong> — 10 a 20 días hábiles')}
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--borde);font-size:12px;color:var(--muted);">
-      📦 Los pedidos se realizan los fines de semana.<br>
-      ⚠️ El costo de los repuestos no incluye IVA.
+      ${pie ? esc(pie) : '📦 Los pedidos se realizan los fines de semana.<br>\n      ⚠️ El costo de los repuestos no incluye IVA.'}
     </div>
   </div>`;
 }
@@ -725,9 +853,7 @@ function iniciar(payload) {
     const tieneVeh = cliente.tieneVehiculo;
     const modeloNombre = (cliente.modelo || '').replace(/\s*\d{4}\s*[-–]\s*(\d{4}|presente|present|actual|hoy)?\s*$/i, '').trim();
     const modeloLinea = [modeloNombre, cliente.version, cliente.anio].filter(Boolean).join(' · ');
-    const fechaCot = cliente.fechaCotizacion
-      ? new Date(cliente.fechaCotizacion).toLocaleDateString('es-CR', { day: 'numeric', month: 'long' })
-      : '';
+    const fechaCot = fechaCR(cliente.fechaCotizacion, { year: undefined });
     const folio = folioNum(cliente.numero);
     const folioBlock = folio
       ? `<div style="text-align:right;flex-shrink:0;"><div style="font-family:'Titillium Web',sans-serif;font-size:7.5px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:600;">Cotización</div><div style="font-family:'Titillium Web',sans-serif;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:0.5px;">${esc(folio)}</div></div>`
@@ -1012,7 +1138,7 @@ function iniciar(payload) {
         return { repuesto_idx: ri, rejected: true }; // null = rechazo implícito
       });
 
-      const ALREADY_APPROVED = ['aprobado','en_camino','listo','agendado','en_taller','cobrado'];
+      const ALREADY_APPROVED = ['aprobado','en_camino','listo','agendado','en_taller','cobrado','perdido'];
       if (payload._cotizacionId) {
         try {
           const chkRes = await fetch(`${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}&select=cliente_aprobado_at,estado`, {
