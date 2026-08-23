@@ -111,6 +111,8 @@
       radial-gradient(circle 0.8px at 26% 27%, #FFCC00 97%, transparent 100%),
       #003399}
     .mf.eu::after{content:''}
+    .mf.cn{background:radial-gradient(circle 2.2px at 22% 36%, #FFDE00 97%, transparent 100%), #DE2910}
+    .mf.cn::after{content:''}
 
     .cliente-hero {
       background: var(--card);
@@ -279,6 +281,17 @@ function snack(msg, ok=true) {
   snack._t = setTimeout(() => { el.className = ''; }, 2400);
 }
 
+// Origen de una opción ('usa' | 'europa' | 'china'; default usa) — única fuente
+// de bandera (CSS .mf) y nombre. Mismo catálogo que lib/utils.js del Taller.
+const ORIGEN_INFO = {
+  usa:    { cls: 'us', nombre: 'Estados Unidos' },
+  europa: { cls: 'eu', nombre: 'Europa' },
+  china:  { cls: 'cn', nombre: 'China' },
+};
+const origenKey = o => (ORIGEN_INFO[o] ? o : 'usa');
+function flagHTML(origen) { return `<span class="mf ${ORIGEN_INFO[origenKey(origen)].cls}"></span>`; }
+function nombreOrigen(origen) { return ORIGEN_INFO[origenKey(origen)].nombre; }
+
 // Fechas SIEMPRE en hora de Costa Rica (el navegador del cliente puede estar en
 // otra zona). Un 'YYYY-MM-DD' suelto (columna date, p. ej. fecha_agendado) se
 // arma como fecha civil: new Date('2026-08-25') sería medianoche UTC = el día
@@ -443,7 +456,7 @@ function mostrarYaAprobado(row) {
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
             <div style="color:var(--texto);">
               ${esc(rep.nombre || '')}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
-              ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
+              ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
             </div>
             ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
           </div>`).join('')}
@@ -480,7 +493,7 @@ function mostrarYaAprobado(row) {
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
             <div style="color:var(--texto);">
               ${esc(rep.nombre || '')}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
-              ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
+              ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
             </div>
             ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
           </div>`).join('')}
@@ -498,7 +511,7 @@ function mostrarYaAprobado(row) {
         ${saldoTotal > 0 && notaSaldo ? `<div style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:6px;">${notaSaldo}</div>` : ''}
       </div>` : '';
   // Orígenes de las opciones aprobadas (para resaltar la fila de tiempos que aplica)
-  const origenesAprobados = [...new Set(aprobadosSel.map(({ op }) => (op?.origen === 'europa' ? 'europa' : 'usa')))];
+  const origenesAprobados = [...new Set(aprobadosSel.map(({ op }) => origenKey(op?.origen)))];
 
   // Cajas de monto reutilizables (mismo look que cb32bec: flex 1, min-width 130).
   const cajaNeutra = (titulo, monto) => `
@@ -686,6 +699,7 @@ function mostrarYaAprobado(row) {
         if (op) {
           const specs = [op.calidad, op.estado].filter(Boolean).join(' / ');
           if (specs || op.marca) l += `\n  → ${specs}${op.marca ? (specs ? ' · ' : '') + op.marca : ''}`;
+          l += `\n  → Origen: ${nombreOrigen(op.origen)}`;
           if (op.garantia) l += `\n  → 🛡️ ${op.garantia}`;
           if (op.precioFinalCRC != null) l += `\n  → ${fCRC(op.precioFinalCRC)}`;
         }
@@ -797,6 +811,7 @@ function tiemposEntregaHTML(origenes = null, pie = null) {
     <div style="display:flex;flex-direction:column;gap:8px;">
       ${fila('usa', 'us', '<strong>Estados Unidos</strong> — 7 a 10 días hábiles')}
       ${fila('europa', 'eu', '<strong>Europa</strong> — 10 a 20 días hábiles')}
+      ${fila('china', 'cn', '<strong>China</strong> — 15 a 20 días hábiles')}
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--borde);font-size:12px;color:var(--muted);">
       ${pie ? esc(pie) : '📦 Los pedidos se realizan los fines de semana.<br>\n      ⚠️ El costo de los repuestos no incluye IVA.'}
@@ -913,7 +928,7 @@ function iniciar(payload) {
               <div class="radio-dot"></div>
               <div class="opcion-cliente-info">
                 <div class="opcion-cliente-titulo">${esc(op.calidad)} · ${esc(op.estado)}${op.marca ? ' · ' + esc(op.marca) : ''}</div>
-                <div class="opcion-cliente-meta">${op.origen === 'europa' ? '<span class="mf eu"></span> Europa' : '<span class="mf us"></span> Estados Unidos'}${op.garantia ? ' · 🛡️ Garantía: ' + esc(op.garantia) : ''}</div>
+                <div class="opcion-cliente-meta">${flagHTML(op.origen)} ${nombreOrigen(op.origen)}${op.garantia ? ' · 🛡️ Garantía: ' + esc(op.garantia) : ''}</div>
               </div>
               <div class="opcion-cliente-precio">${fCRC(op.precioFinalCRC)}</div>
             </label>
@@ -942,7 +957,7 @@ function iniciar(payload) {
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
               <div>
                 <div class="resumen-item-nombre">${esc(r.nombre)}${r.cantidad > 1 ? ` <span style="font-size:12px;font-weight:500;color:var(--muted);">× ${r.cantidad}</span>` : ''}</div>
-                <div class="resumen-item-det">${esc(op.calidad)} · ${esc(op.estado)}${op.marca?' · '+esc(op.marca):''}${op.garantia?' · 🛡️ '+esc(op.garantia):''}</div>
+                <div class="resumen-item-det">${flagHTML(op.origen)} ${esc(op.calidad)} · ${esc(op.estado)}${op.marca?' · '+esc(op.marca):''}${op.garantia?' · 🛡️ '+esc(op.garantia):''}</div>
               </div>
               <div class="resumen-item-precio">${fCRC(op.precioFinalCRC)}</div>
             </div>
