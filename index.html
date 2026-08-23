@@ -661,7 +661,7 @@ function mostrarYaAprobado(row) {
               <div style="color:var(--texto);">
                 ${esc(rep.nombre || '')}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
                 ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
-                ${op && String(op.garantia || '').trim() ? `<div style="color:var(--success);font-size:12px;margin-top:2px;">🛡 Garantía: ${esc(op.garantia)}</div>` : ''}
+                ${op && String(op.garantia || '').trim() ? `<div style="color:var(--success);font-size:12px;margin-top:2px;">🛡️ Garantía: ${esc(op.garantia)}</div>` : ''}
               </div>
               ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
             </div>`).join('')}
@@ -692,7 +692,7 @@ function mostrarYaAprobado(row) {
         <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Escribinos y revisamos tu caso.</div>
         <a href="#" id="btnGarantia"
            style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
-          🛡 Reclamar garantía por WhatsApp
+          🛡️ Reclamar garantía por WhatsApp
         </a>
       </div>`;
       const reviewHTML = GOOGLE_REVIEW_URL ? `
@@ -746,7 +746,7 @@ function mostrarYaAprobado(row) {
     if (btnG) btnG.addEventListener('click', function(e) {
       e.preventDefault();
       const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
-      const mensaje = `🛡 *Reclamo de garantía*${folio ? ` ${folio}` : ''}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nQuiero hacer un reclamo de garantía de la cotización${folio ? ` ${folio}` : ''}.`;
+      const mensaje = `🛡️ *Reclamo de garantía*${folio ? ` ${folio}` : ''}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nQuiero hacer un reclamo de garantía de la cotización${folio ? ` ${folio}` : ''}.`;
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
 
