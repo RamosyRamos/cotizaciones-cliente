@@ -256,6 +256,8 @@
 <script>
 const SUPABASE_URL = 'https://lnsglpvobvfzbxpmyagc.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxuc2dscHZvYnZmemJ4cG15YWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNjQ0NTQsImV4cCI6MjA5MDk0MDQ1NH0.QaPVpVqvOe4Sh8brJge7JZzFhB23gt_gvtSqgBVkZ1Y';
+// Reseña de Google (vista de cierre). Vacío ⇒ el botón no se renderiza.
+const GOOGLE_REVIEW_URL = 'https://g.page/r/CToGsJW0_zc1EBM/review';
 
 function fCRC(n) {
   return '₡' + Number(n||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
@@ -595,20 +597,24 @@ function mostrarYaAprobado(row) {
     cuerpoHTML = resumenPedidoHTML
       + tiemposEntregaHTML(origenesAprobados, '🔔 Te avisaremos cuando lleguen al taller.')
       + abonoHTML();
-  } else if (estado === 'listo' || estado === 'agendado') {
+  } else if (estado === 'listo' || estado === 'agendado' || estado === 'en_taller') {
     // Rama D — repuestos en el taller: cita agendada o coordinar instalación/retiro.
     // En 'agendado' estado_changed_at es la fecha del agendado, no de la llegada → sin línea.
+    // En 'en_taller' el vehículo ya está adentro: sin llegada ni cita, solo resumen y saldo.
+    const enTaller = estado === 'en_taller';
     const fLlegada = estado === 'listo' ? fechaCR(row.estado_changed_at) : '';
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
-      <div style="font-size:3rem;margin-bottom:12px;">📦</div>
-      <h2>¡Tus repuestos ya están en el taller!</h2>
+      <div style="font-size:3rem;margin-bottom:12px;">${enTaller ? '🔧' : '📦'}</div>
+      <h2>${enTaller ? 'Estamos trabajando en tu vehículo' : '¡Tus repuestos ya están en el taller!'}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fLlegada ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Llegaron el ${esc(fLlegada)}</p>` : ''}
     </div>`;
     const retiro = row.con_instalacion === false;
     let citaHTML;
-    if (row.fecha_agendado) {
+    if (enTaller) {
+      citaHTML = '';
+    } else if (row.fecha_agendado) {
       // fecha_agendado es DATE (sin hora): solo fecha civil CR.
       citaHTML = `
       <div style="background:var(--card);border:1px solid var(--success);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
@@ -628,21 +634,78 @@ function mostrarYaAprobado(row) {
       </div>`;
     }
     cuerpoHTML = resumenPedidoHTML + citaHTML
-      + abonoHTML(`El saldo se cancela al momento de la ${retiro ? 'entrega' : 'instalación'}.`);
+      + abonoHTML(enTaller ? 'El saldo se cancela al retirar el vehículo.' : `El saldo se cancela al momento de la ${retiro ? 'entrega' : 'instalación'}.`);
   } else {
-    // Rama B — estado posterior a 'aprobado': seguimiento, sin cuentas.
-    cuerpoHTML = `
-      <div class="card" style="text-align:center;color:var(--muted);padding:24px;">
-        <p>Tu pedido está en proceso. El taller se pondrá en contacto con vos para coordinar la entrega.</p>
-        <p style="margin-top:12px;font-size:13px;">Si tenés alguna consulta, contactanos por WhatsApp al <strong style="color:var(--texto);">8887-2667</strong>.</p>
-      </div>`
-      + (adelantoPagado > 0 ? `
+    // Rama E — cierre (cobrado / perdido, sin distinguir). También es el
+    // fallback de cualquier estado no contemplado: hero de cierre sin cards.
+    const esCierre = estado === 'cobrado' || estado === 'perdido';
+    const fCierre = fechaCR(row.estado_changed_at);
+    heroHTML = `
+    <div class="cliente-hero" style="margin-top:16px;">
+      <div style="font-size:3rem;margin-bottom:12px;">✅</div>
+      <h2>Transacción finalizada</h2>
+      ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
+      <p style="color:var(--texto);font-size:14px;margin-top:8px;">Gracias por confiar en Ramos y Ramos</p>
+      ${fCierre ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Cerrada el ${esc(fCierre)}</p>` : ''}
+    </div>`;
+    if (!esCierre) {
+      cuerpoHTML = '';
+    } else {
+      // Resumen con garantía por repuesto (solo si la opción aprobada la trae)
+      const resumenCierreHTML = aprobadosSel.length > 0 ? `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          ${cajaVerde('✓ Ya abonaste', adelantoPagado)}
+        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">Resumen de tu pedido</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${aprobadosSel.map(({ rep, op }) => `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
+              <div style="color:var(--texto);">
+                ${esc(rep.nombre || '')}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
+                ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
+                ${op && String(op.garantia || '').trim() ? `<div style="color:var(--success);font-size:12px;margin-top:2px;">🛡 Garantía: ${esc(op.garantia)}</div>` : ''}
+              </div>
+              ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
+            </div>`).join('')}
         </div>
-        ${lineaSaldo}
-      </div>` : '');
+      </div>` : '';
+      // Resumen de pago: solo si hay total_aprobado (null = cotización sin cierre económico)
+      let pagoHTML = '';
+      if (row.total_aprobado != null) {
+        const tot = Number(row.total_aprobado) || 0;
+        const saldo = Math.max(0, tot - adelantoPagado);
+        pagoHTML = `
+      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Resumen de pago</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          ${cajaNeutra('Total', tot)}
+          ${cajaVerde('Abonado', adelantoPagado)}
+          ${saldo > 0 ? cajaRoja('Saldo', saldo) : `
+          <div style="flex:1;min-width:130px;background:color-mix(in srgb, var(--success) 8%, transparent);border:1px solid var(--success);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">Saldo</div>
+            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--success);font-weight:700;">✓ Pagado</div>
+          </div>`}
+        </div>
+      </div>`;
+      }
+      const garantiaHTML = `
+      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
+        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">¿Algún problema con tus repuestos?</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Escribinos y revisamos tu caso.</div>
+        <a href="#" id="btnGarantia"
+           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+          🛡 Reclamar garantía por WhatsApp
+        </a>
+      </div>`;
+      const reviewHTML = GOOGLE_REVIEW_URL ? `
+      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
+        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">¿Cómo te fue?</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Tu opinión nos ayuda a seguir mejorando.</div>
+        <a href="${esc(GOOGLE_REVIEW_URL)}" target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--navy);color:var(--card);border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+          ⭐ Dejanos tu reseña en Google
+        </a>
+      </div>` : '';
+      cuerpoHTML = resumenCierreHTML + pagoHTML + garantiaHTML + reviewHTML;
+    }
   }
 
   const contactoHTML = `
@@ -674,6 +737,15 @@ function mostrarYaAprobado(row) {
         : estado === 'en_camino'
           ? `💬 *Consulta sobre mi pedido en camino*${refFolio}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nMi pedido está en camino y tengo una consulta.`
           : `💬 *Consulta sobre mi pedido*${refFolio}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}`;
+      window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
+    });
+
+    // Rama E: reclamo de garantía (mismo número).
+    const btnG = document.getElementById('btnGarantia');
+    if (btnG) btnG.addEventListener('click', function(e) {
+      e.preventDefault();
+      const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
+      const mensaje = `🛡 *Reclamo de garantía*${folio ? ` ${folio}` : ''}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nQuiero hacer un reclamo de garantía de la cotización${folio ? ` ${folio}` : ''}.`;
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
 
