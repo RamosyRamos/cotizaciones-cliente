@@ -669,20 +669,20 @@ function mostrarYaAprobado(row) {
       </div>` : '';
       // Resumen de pago: solo si hay total_aprobado (null = cotización sin cierre económico)
       let pagoHTML = '';
-      if (row.total_aprobado != null) {
+      // Solo en 'cobrado': el cobro final va por el libro del Taller y NO
+      // actualiza adelanto_realizado, así que acá no se calcula saldo — cobrado
+      // es pagado por definición. 'perdido' es cierre interno: sin card.
+      if (estado === 'cobrado' && row.total_aprobado != null) {
         const tot = Number(row.total_aprobado) || 0;
-        const saldo = Math.max(0, tot - adelantoPagado);
         pagoHTML = `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Resumen de pago</div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
           ${cajaNeutra('Total', tot)}
-          ${cajaVerde('Abonado', adelantoPagado)}
-          ${saldo > 0 ? cajaRoja('Saldo', saldo) : `
           <div style="flex:1;min-width:130px;background:color-mix(in srgb, var(--success) 8%, transparent);border:1px solid var(--success);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">Saldo</div>
+            <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">Estado</div>
             <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--success);font-weight:700;">✓ Pagado</div>
-          </div>`}
+          </div>
         </div>
       </div>`;
       }
@@ -704,7 +704,8 @@ function mostrarYaAprobado(row) {
           ⭐ Dejanos tu reseña en Google
         </a>
       </div>` : '';
-      cuerpoHTML = resumenCierreHTML + pagoHTML + garantiaHTML + reviewHTML;
+      // perdido: sin garantía (no hubo entrega al cliente)
+      cuerpoHTML = resumenCierreHTML + pagoHTML + (estado === 'perdido' ? '' : garantiaHTML) + reviewHTML;
     }
   }
 
