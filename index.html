@@ -318,6 +318,35 @@ function diasDesde(iso) {
   };
   return Math.max(0, Math.round((civil(new Date()) - civil(d)) / 86400000));
 }
+// Días HÁBILES (L-V, sin feriados) transcurridos desde `iso` hasta hoy, ambos
+// como fecha civil CR: se cuentan los hábiles POSTERIORES al día de partida,
+// incluyendo hoy — el día en que arranca el conteo vale 0 (igual que "hecho
+// hoy → 0") y se vuelve día 1 recién al terminar. Si `iso` cae en fin de
+// semana, la partida se corre al lunes siguiente (pedido del sábado visto el
+// lunes → 0; el lunes cuenta como día 1 recién el martes). null si no hay fecha.
+function diasHabilesDesde(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  // Fecha civil CR como Date UTC a medianoche: getUTCDay() = día de semana EN CR.
+  const civil = x => {
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone: TZ_CR, year: 'numeric', month: '2-digit', day: '2-digit' }).format(x);
+    const [y, mo, da] = p.split('-').map(Number);
+    return Date.UTC(y, mo - 1, da);
+  };
+  const DIA = 86400000;
+  let desde = civil(d);
+  const hoy = civil(new Date());
+  const dow0 = new Date(desde).getUTCDay();               // 0=domingo … 6=sábado
+  if (dow0 === 6) desde += 2 * DIA;                       // sábado → lunes
+  else if (dow0 === 0) desde += DIA;                      // domingo → lunes
+  let n = 0;
+  for (let t = desde + DIA; t <= hoy; t += DIA) {
+    const dow = new Date(t).getUTCDay();
+    if (dow >= 1 && dow <= 5) n++;
+  }
+  return n;                                               // mínimo 0 por construcción
+}
 
 // UUID from ?id= (404 redirect) or ?k= (legacy)
 const params = new URLSearchParams(location.search);
@@ -583,8 +612,8 @@ function mostrarYaAprobado(row) {
       </div>`;
   } else if (estado === 'en_camino') {
     // Rama C — pedido realizado, repuestos en camino.
-    const dias = diasDesde(row.estado_changed_at);
-    const badge = dias == null ? '' : dias === 0 ? 'Hoy' : `${dias} día${dias === 1 ? '' : 's'} en camino`;
+    const dias = diasHabilesDesde(row.estado_changed_at);
+    const badge = dias == null ? '' : dias === 0 ? 'Hoy' : `${dias} día${dias === 1 ? ' hábil' : 's hábiles'} en camino`;
     const fPedido = fechaCR(row.estado_changed_at);
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
