@@ -402,7 +402,7 @@ const I18N = {
     'sel.fecha_linea': 'Cotización del <b style="color:var(--dim);font-weight:700;">{fecha}</b> · válida por <b style="color:var(--dim);font-weight:700;">30 días</b>',
     'sel.no_proforma': '<b style="color:var(--warn);font-weight:700;">Esta cotización aún no es una proforma oficial.</b> Elegí los repuestos que querés aprobar y te enviamos la proforma final con el detalle.',
     'sel.imagenes': 'Imágenes',
-    'sel.instrucciones': '👇 <strong>Seleccioná qué repuestos querés aprobar</strong> y cuál opción preferís para cada uno.\n      Cuando termines, tocá <strong>"Confirmar y enviar al taller"</strong>.',
+    'sel.instrucciones': '👇 <strong>Seleccioná qué repuestos querés aprobar</strong> y cuál opción preferís para cada uno.\n      Cuando termines, tocá <strong>"Confirmar selección"</strong>.',
     'sel.no_deseo': 'No deseo este repuesto por ahora',
     'sel.tu_seleccion': '✅ Tu selección',
     'sel.cuanto_abonar': '💳 ¿Cuánto deseás abonar?',
@@ -554,7 +554,7 @@ const I18N = {
     'sel.fecha_linea': 'Quote dated <b style="color:var(--dim);font-weight:700;">{fecha}</b> · valid for <b style="color:var(--dim);font-weight:700;">30 days</b>',
     'sel.no_proforma': '<b style="color:var(--warn);font-weight:700;">This quote is not an official pro forma invoice yet.</b> Choose the parts you want to approve and we will send you the final pro forma with the details.',
     'sel.imagenes': 'Images',
-    'sel.instrucciones': '👇 <strong>Select which parts you want to approve</strong> and which option you prefer for each one.\n      When you are done, tap <strong>"Confirm and send to the workshop"</strong>.',
+    'sel.instrucciones': '👇 <strong>Select which parts you want to approve</strong> and which option you prefer for each one.\n      When you are done, tap <strong>"Confirm selection"</strong>.',
     'sel.no_deseo': 'I don\'t want this part for now',
     'sel.tu_seleccion': '✅ Your selection',
     'sel.cuanto_abonar': '💳 How much would you like to pay now?',
@@ -1628,7 +1628,7 @@ function iniciar(payload) {
     const consultaMsg = folio
       ? t('wa.consulta_folio', { folio })
       : t('wa.consulta_nombre', { nombre: cliente.nombre });
-    const consultaWa = 'https://wa.me/50683439257?text=' + encodeURIComponent(consultaMsg);
+    const consultaWa = 'https://wa.me/50688872667?text=' + encodeURIComponent(consultaMsg);
     const footer = `
     <div style="border-top:1px solid var(--borde);margin-top:20px;padding-top:22px;text-align:center;">
       <div style="font-size:15px;font-weight:700;color:var(--texto);">${t('footer.dudas')}</div>
