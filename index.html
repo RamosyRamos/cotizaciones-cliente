@@ -235,6 +235,12 @@
     @media (max-width: 480px) {
       .header { padding: 12px 16px; gap: 10px; }
     }
+    /* Toggle de idioma (ES · EN) y leyenda de traducción — mono chico, discreto */
+    .lang-toggle { margin-left:auto; align-self:flex-start; display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono','SFMono-Regular',Menlo,Consolas,monospace; font-size:11px; letter-spacing:1px; color:var(--muted); }
+    .lang-toggle button { background:none; border:none; padding:4px 2px; color:inherit; font:inherit; cursor:pointer; opacity:0.7; }
+    .lang-toggle button.on { color:var(--texto); font-weight:700; opacity:1; text-decoration:underline; text-underline-offset:3px; }
+    .trad-leyenda { text-align:center; font-size:11.5px; color:var(--muted); margin-top:18px; }
+    .trad-leyenda button { background:none; border:none; padding:0; color:var(--navy); font:inherit; text-decoration:underline; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -243,13 +249,14 @@
   <img src="logo-1x.png" srcset="logo-1x.png 1x, logo-2x.png 2x, logo-3x.png 3x" alt="Taller Ramos y Ramos" class="logo">
   <div>
     <h1>Taller Ramos y Ramos</h1>
-    <p id="headerSub">Tu cotización personalizada</p>
-    <div id="vipBadge" class="vip-badge">★ Precio VIP / Al costo</div>
+    <p id="headerSub" data-i18n="header.sub">Tu cotización personalizada</p>
+    <div id="vipBadge" class="vip-badge" data-i18n="header.vip">★ Precio VIP / Al costo</div>
   </div>
+  <div class="lang-toggle" id="langToggle" aria-label="Idioma / Language"><button type="button" data-lang="es">ES</button><span>·</span><button type="button" data-lang="en">EN</button></div>
 </div>
 
 <div class="wrap" id="appRoot">
-  <div class="empty"><div class="icon">⏳</div><p>Cargando tu cotización...</p></div>
+  <div class="empty"><div class="icon">⏳</div><p data-i18n="cargando">Cargando tu cotización...</p></div>
 </div>
 <div id="snackbar"></div>
 
@@ -258,6 +265,376 @@ const SUPABASE_URL = 'https://lnsglpvobvfzbxpmyagc.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxuc2dscHZvYnZmemJ4cG15YWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNjQ0NTQsImV4cCI6MjA5MDk0MDQ1NH0.QaPVpVqvOe4Sh8brJge7JZzFhB23gt_gvtSqgBVkZ1Y';
 // Reseña de Google (vista de cierre). Vacío ⇒ el botón no se renderiza.
 const GOOGLE_REVIEW_URL = 'https://g.page/r/CToGsJW0_zc1EBM/review';
+
+// ── i18n (es/en) ──────────────────────────────────────────────────────────
+// TODAS las cadenas visibles al cliente viven acá. ES = texto original byte a
+// byte; EN con el glosario del taller (quote, deposit, part, workshop, business
+// days, VAT…). Valores-función para plurales. Resolución del idioma:
+// localStorage 'cot_idioma' (toggle) > clientes.idioma > navigator.language.
+const I18N = {
+  es: {
+    'title': 'Taller Ramos y Ramos – Tu Cotización',
+    'doc.title_fallback': 'Tu cotización',
+    'header.sub': 'Tu cotización personalizada',
+    'header.sub_para': 'Cotización confeccionada para {nombre}',
+    'header.vip': '★ Precio VIP / Al costo',
+    'cargando': 'Cargando tu cotización...',
+    'si': 'Sí',
+    'no': 'No',
+    'garantia_prefijo': '🛡️ Garantía: ',
+    // errores / estados de guardado
+    'error.reenviar': 'Pedile a tu taller que te reenvíe el link.',
+    'error.link': 'Link inválido o expirado.',
+    'error.no_encontrada': 'Cotización no encontrada.',
+    'error.cargar': 'No se pudo cargar la cotización. Intentá de nuevo.',
+    'error.guardar': '⚠️ Error al guardar: {msg}',
+    'guardando': '⏳ Guardando tu selección...',
+    'alert.ya_aprobada': 'Esta cotización ya fue aprobada. Recargá la página para ver el estado actualizado.',
+    // catálogo (origen / prioridad / estado de la opción)
+    'origen.usa': 'Estados Unidos',
+    'origen.europa': 'Europa',
+    'origen.china': 'China',
+    'prio.critico': 'Crítico',
+    'prio.recomendado': 'Recomendado',
+    'prio.opcional': 'Opcional',
+    'estado.nuevo': 'Nuevo',
+    'estado.usado': 'Usado',
+    'estado.reconstruido': 'Reconstruido',
+    // vista aprobada (A1/A2/A3)
+    'ap.resumen_pedido': 'Resumen de tu pedido',
+    'ap.con_instalacion': '🔧 Con instalación en el taller',
+    'ap.solo_repuestos': 'Solo repuestos',
+    'ap.enviar_comprobante': 'Enviar comprobante de pago',
+    'ap.hero_aprobada': '¡Cotización aprobada!',
+    'ap.aprobada_el': 'Aprobada el {fecha}',
+    'ap.ya_abonaste': '✓ Ya abonaste',
+    'ap.saldo_linea': 'Saldo del total: <strong style="color:var(--muted);">{monto}</strong> — se paga contra entrega.',
+    'ap.a1_intro': 'Tu selección quedó registrada. Para <strong style="color:var(--texto);">iniciar el pedido</strong>, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.',
+    'ap.a1_intro_sin_total': 'Tu selección ya fue registrada. Para iniciar el pedido, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.',
+    'ap.total_aprobado': 'Total aprobado',
+    'ap.adelanto_requerido': 'Adelanto requerido 50%',
+    'ap.a2_intro': 'Ya registramos tu abono. Para <strong style="color:var(--texto);">completar el adelanto</strong> transferí lo que falta a cualquiera de las cuentas de abajo.',
+    'ap.falta_adelanto': 'Falta del adelanto',
+    'ap.adelanto_cubierto': '✓ Adelanto cubierto',
+    'ap.taller_procedera': 'El taller procederá con el pedido.',
+    'ap.ya_abonaste_linea': 'Ya abonaste: <strong style="color:var(--success);">{monto}</strong>',
+    // seguimiento (C en camino / D en taller)
+    'seg.badge_dias': ({ dias }) => dias === 0 ? 'Pedido recién realizado' : `${dias} día${dias === 1 ? ' hábil' : 's hábiles'} en camino`,
+    'seg.hero_pedido': '¡Tu pedido ya fue realizado!',
+    'seg.pedido_el': 'Pedido realizado el {fecha}',
+    'seg.aviso_llegada': '🔔 Te avisaremos cuando lleguen al taller.',
+    'seg.hero_en_taller': 'Estamos trabajando en tu vehículo',
+    'seg.hero_listo': '¡Tus repuestos ya están en el taller!',
+    'seg.llegaron_el': 'Llegaron el {fecha}',
+    'seg.tu_cita': '📅 Tu cita',
+    'seg.te_esperamos': 'Te esperamos en el taller.',
+    'seg.retiro_titulo': 'Podés pasar a retirarlos',
+    'seg.instal_titulo': 'Coordinemos la instalación',
+    'seg.retiro_texto': 'Escribinos para coordinar el día y la hora de retiro.',
+    'seg.instal_texto': 'Escribinos para agendar el día y la hora de la instalación.',
+    'seg.btn_retiro': '💬 Coordinar retiro por WhatsApp',
+    'seg.btn_agendar': '📅 Agendar por WhatsApp',
+    'seg.saldo_retirar': 'El saldo se cancela al retirar el vehículo.',
+    'seg.saldo_entrega': 'El saldo se cancela al momento de la entrega.',
+    'seg.saldo_instalacion': 'El saldo se cancela al momento de la instalación.',
+    // cierre (E)
+    'cierre.hero': 'Transacción finalizada',
+    'cierre.gracias': 'Gracias por confiar en Ramos y Ramos',
+    'cierre.cerrada_el': 'Cerrada el {fecha}',
+    'cierre.resumen_pago': 'Resumen de pago',
+    'cierre.total': 'Total',
+    'cierre.estado': 'Estado',
+    'cierre.pagado': '✓ Pagado',
+    'cierre.garantia_titulo': '¿Algún problema con tus repuestos?',
+    'cierre.garantia_texto': 'Escribinos y revisamos tu caso.',
+    'cierre.btn_garantia': '🛡️ Reclamar garantía por WhatsApp',
+    'cierre.review_titulo': '¿Cómo te fue?',
+    'cierre.review_texto': 'Tu opinión nos ayuda a seguir mejorando.',
+    'cierre.btn_review': '⭐ Dejanos tu reseña en Google',
+    // contacto (pie de las vistas post-aprobación)
+    'contacto.modificar': 'Si necesitás modificar tu selección, contactanos. El taller puede reabrir tu cotización para que la apruebes nuevamente.',
+    'contacto.dudas': '¿Tenés dudas sobre tu pedido? Escribinos y con gusto te ayudamos.',
+    'contacto.btn_modificar': '📞 Necesito modificar mi selección',
+    'contacto.btn_consultar': '💬 Consultar por WhatsApp',
+    // mensajes de WhatsApp a recepción
+    'wa.cliente_default': 'Cliente',
+    'wa.repuesto_default': 'Repuesto',
+    'wa.veh_linea': '\nVehículo: {veh}',
+    'wa.modificacion': '🔄 *Solicitud de modificación*\n\nCliente: {cN}{vehL}\nCotización: {url}\n\nNecesito hacer cambios en mi selección antes del pedido.',
+    'wa.consulta_camino': '💬 *Consulta sobre mi pedido en camino*{refFolio}\n\nCliente: {cN}{vehL}\nCotización: {url}\n\nMi pedido está en camino y tengo una consulta.',
+    'wa.consulta': '💬 *Consulta sobre mi pedido*{refFolio}\n\nCliente: {cN}{vehL}\nCotización: {url}',
+    'wa.garantia': '🛡️ *Reclamo de garantía*{refFolio}\n\nCliente: {cN}{vehL}\nCotización: {url}\n\nQuiero hacer un reclamo de garantía de la cotización{refFolio}.',
+    'wa.retiro': '📦 *Retiro de repuestos*{refFolio}\n\nCliente: {cN}{vehL}\nCotización: {url}\n\nMis repuestos ya llegaron, quiero coordinar el retiro.',
+    'wa.agendar': '📅 *Agendar instalación*{refFolio}\n\nCliente: {cN}{vehL}\nCotización: {url}\n\nMis repuestos ya llegaron, quiero agendar la instalación.',
+    'wa.comp_titulo': '✅ *Aprobación de cotización – Taller Ramos y Ramos*\n👤 Cliente: {cN}',
+    'wa.comp_veh': '\n🚗 Vehículo: {veh}',
+    'wa.comp_repuestos': '\n\n*Repuestos aprobados:*\n',
+    'wa.comp_origen': '\n  → Origen: {o}',
+    'wa.comp_mas': '\n… y {n} más',
+    'wa.comp_total': '\n\n💰 *Total aprobado: {monto}*',
+    'wa.comp_monto': '\n💵 Monto a pagar: {monto}',
+    'wa.comp_instalacion': '\n🔧 Instalación: {v}',
+    'wa.comp_adjunto': '\n\nAdjunto el comprobante de la transferencia.',
+    'wa.consulta_folio': 'Hola, tengo una consulta sobre mi cotización {folio}',
+    'wa.consulta_nombre': 'Hola, tengo una consulta sobre mi cotización a nombre de {nombre}',
+    'pago.adelanto': 'adelanto 50%',
+    'pago.total': 'pago total',
+    'pago.otro': 'monto personalizado',
+    // cuentas bancarias
+    'cuentas.titulo': 'Instrucciones de pago',
+    'cuentas.intro1': 'Para proceder con el pedido se requiere el <strong>50% del costo</strong> de los repuestos como adelanto.',
+    'cuentas.intro2': 'El adelanto o cancelación total se puede realizar por <strong>transferencia, SINPE o efectivo</strong>, y con <strong>tarjeta de crédito</strong> en días hábiles en nuestro establecimiento.',
+    'cuentas.bac_crc': '🏦 Cuenta BAC Colones',
+    'cuentas.bac_usd': '💵 Cuenta BAC Dólares',
+    'cuentas.titular': 'Titular:',
+    'cuentas.numero': 'N° cuenta:',
+    // tiempos de entrega
+    'tiempos.tu_pedido': 'tu pedido',
+    'tiempos.titulo': '⏱️ Tiempos estimados de entrega',
+    'tiempos.usa': '<strong>Estados Unidos</strong> — 7 a 15 días hábiles',
+    'tiempos.europa': '<strong>Europa</strong> — 10 a 20 días hábiles',
+    'tiempos.china': '<strong>China</strong> — 15 a 20 días hábiles',
+    'tiempos.pie': '📦 Los pedidos se realizan los fines de semana.<br>\n      ⚠️ El costo de los repuestos no incluye IVA.',
+    // selección (vista A antes de aprobar)
+    'venc.titulo': '⏳ Cotización vencida',
+    'venc.texto': 'Esta cotización venció. Los precios pueden haber cambiado. Escribinos para pedir una cotización actualizada.',
+    'sel.folio_label': 'Cotización',
+    'sel.fecha_linea': 'Cotización del <b style="color:var(--dim);font-weight:700;">{fecha}</b> · válida por <b style="color:var(--dim);font-weight:700;">30 días</b>',
+    'sel.no_proforma': '<b style="color:var(--warn);font-weight:700;">Esta cotización aún no es una proforma oficial.</b> Elegí los repuestos que querés aprobar y te enviamos la proforma final con el detalle.',
+    'sel.imagenes': 'Imágenes',
+    'sel.instrucciones': '👇 <strong>Seleccioná qué repuestos querés aprobar</strong> y cuál opción preferís para cada uno.\n      Cuando termines, tocá <strong>"Confirmar y enviar al taller"</strong>.',
+    'sel.no_deseo': 'No deseo este repuesto por ahora',
+    'sel.tu_seleccion': '✅ Tu selección',
+    'sel.cuanto_abonar': '💳 ¿Cuánto deseás abonar?',
+    'sel.adelanto_min': 'Adelanto mínimo (50%)',
+    'sel.pago_total': 'Pago total',
+    'sel.otro_monto': 'Otro monto',
+    'sel.minimo': 'Mínimo {monto}',
+    'sel.placeholder_monto': 'Ingresá el monto en colones',
+    'sel.error_monto': 'El monto debe ser entre {min} y {max}.',
+    'sel.btn_confirmar': 'Confirmar selección',
+    'sel.preview': '👁 Vista previa interna — la aprobación está deshabilitada',
+    'sel.selecciona_uno': 'Seleccioná al menos un repuesto para continuar',
+    'footer.dudas': '¿Tenés dudas sobre tu cotización?',
+    'footer.escribinos': 'Escribinos y con gusto te ayudamos.',
+    'footer.btn': 'Escribir al taller',
+    // modales
+    'modal.titulo': 'Repuestos sin seleccionar',
+    'modal.texto': 'Los siguientes repuestos no fueron seleccionados y se tomarán como rechazados:',
+    'modal.confirmar_q': '¿Confirmar y enviar?',
+    'modal.volver': 'Volver',
+    'modal.confirmar': 'Confirmar y enviar',
+    'mo.titulo': 'Mano de obra',
+    'mo.texto': '¿Deseás agregar el costo de mano de obra a la proforma oficial?',
+    'mo.si': 'Sí, incluir instalación',
+    'mo.no': 'No, solo los repuestos',
+    'mo.volver': '← Volver',
+    // leyenda de traducción automática
+    'trad.leyenda': 'Traducido automáticamente',
+    'trad.ver_original': 'Ver original',
+    'trad.ver_traduccion': 'Ver traducción',
+  },
+  en: {
+    'title': 'Taller Ramos y Ramos – Your Quote',
+    'doc.title_fallback': 'Your quote',
+    'header.sub': 'Your personalized quote',
+    'header.sub_para': 'Quote prepared for {nombre}',
+    'header.vip': '★ VIP price / At cost',
+    'cargando': 'Loading your quote...',
+    'si': 'Yes',
+    'no': 'No',
+    'garantia_prefijo': '🛡️ Warranty: ',
+    'error.reenviar': 'Ask your workshop to resend the link.',
+    'error.link': 'Invalid or expired link.',
+    'error.no_encontrada': 'Quote not found.',
+    'error.cargar': 'We couldn\'t load your quote. Please try again.',
+    'error.guardar': '⚠️ Error saving: {msg}',
+    'guardando': '⏳ Saving your selection...',
+    'alert.ya_aprobada': 'This quote has already been approved. Reload the page to see the updated status.',
+    'origen.usa': 'United States',
+    'origen.europa': 'Europe',
+    'origen.china': 'China',
+    'prio.critico': 'Critical',
+    'prio.recomendado': 'Recommended',
+    'prio.opcional': 'Optional',
+    'estado.nuevo': 'New',
+    'estado.usado': 'Used',
+    'estado.reconstruido': 'Remanufactured',
+    'ap.resumen_pedido': 'Your order summary',
+    'ap.con_instalacion': '🔧 With installation at the workshop',
+    'ap.solo_repuestos': 'Parts only',
+    'ap.enviar_comprobante': 'Send payment receipt',
+    'ap.hero_aprobada': 'Quote approved!',
+    'ap.aprobada_el': 'Approved on {fecha}',
+    'ap.ya_abonaste': '✓ Already paid',
+    'ap.saldo_linea': 'Remaining balance: <strong style="color:var(--muted);">{monto}</strong> — due on delivery.',
+    'ap.a1_intro': 'Your selection has been recorded. To <strong style="color:var(--texto);">start the order</strong>, transfer the 50% deposit to any of the accounts below.',
+    'ap.a1_intro_sin_total': 'Your selection has been recorded. To start the order, transfer the 50% deposit to any of the accounts below.',
+    'ap.total_aprobado': 'Approved total',
+    'ap.adelanto_requerido': '50% deposit required',
+    'ap.a2_intro': 'We have recorded your payment. To <strong style="color:var(--texto);">complete the deposit</strong>, transfer the remaining amount to any of the accounts below.',
+    'ap.falta_adelanto': 'Deposit remaining',
+    'ap.adelanto_cubierto': '✓ Deposit covered',
+    'ap.taller_procedera': 'The workshop will proceed with the order.',
+    'ap.ya_abonaste_linea': 'Already paid: <strong style="color:var(--success);">{monto}</strong>',
+    'seg.badge_dias': ({ dias }) => dias === 0 ? 'Order just placed' : `${dias} business day${dias === 1 ? '' : 's'} in transit`,
+    'seg.hero_pedido': 'Your order has been placed!',
+    'seg.pedido_el': 'Order placed on {fecha}',
+    'seg.aviso_llegada': '🔔 We will let you know when they arrive at the workshop.',
+    'seg.hero_en_taller': 'We are working on your vehicle',
+    'seg.hero_listo': 'Your parts are at the workshop!',
+    'seg.llegaron_el': 'Arrived on {fecha}',
+    'seg.tu_cita': '📅 Your appointment',
+    'seg.te_esperamos': 'We look forward to seeing you at the workshop.',
+    'seg.retiro_titulo': 'Ready for pickup',
+    'seg.instal_titulo': 'Let\'s schedule the installation',
+    'seg.retiro_texto': 'Message us to arrange a pickup day and time.',
+    'seg.instal_texto': 'Message us to schedule the installation day and time.',
+    'seg.btn_retiro': '💬 Arrange pickup on WhatsApp',
+    'seg.btn_agendar': '📅 Schedule on WhatsApp',
+    'seg.saldo_retirar': 'The balance is due when you pick up your vehicle.',
+    'seg.saldo_entrega': 'The balance is due at delivery.',
+    'seg.saldo_instalacion': 'The balance is due at installation.',
+    'cierre.hero': 'Transaction completed',
+    'cierre.gracias': 'Thank you for trusting Ramos y Ramos',
+    'cierre.cerrada_el': 'Closed on {fecha}',
+    'cierre.resumen_pago': 'Payment summary',
+    'cierre.total': 'Total',
+    'cierre.estado': 'Status',
+    'cierre.pagado': '✓ Paid',
+    'cierre.garantia_titulo': 'Any issues with your parts?',
+    'cierre.garantia_texto': 'Message us and we will look into it.',
+    'cierre.btn_garantia': '🛡️ Warranty claim on WhatsApp',
+    'cierre.review_titulo': 'How did we do?',
+    'cierre.review_texto': 'Your feedback helps us keep improving.',
+    'cierre.btn_review': '⭐ Leave us a Google review',
+    'contacto.modificar': 'If you need to change your selection, contact us. The workshop can reopen your quote so you can approve it again.',
+    'contacto.dudas': 'Questions about your order? Message us and we will be glad to help.',
+    'contacto.btn_modificar': '📞 I need to change my selection',
+    'contacto.btn_consultar': '💬 Ask on WhatsApp',
+    'wa.cliente_default': 'Customer',
+    'wa.repuesto_default': 'Part',
+    'wa.veh_linea': '\nVehicle: {veh}',
+    'wa.modificacion': '🔄 *Change request*\n\nCustomer: {cN}{vehL}\nQuote: {url}\n\nI need to make changes to my selection before the order is placed.',
+    'wa.consulta_camino': '💬 *Question about my order in transit*{refFolio}\n\nCustomer: {cN}{vehL}\nQuote: {url}\n\nMy order is in transit and I have a question.',
+    'wa.consulta': '💬 *Question about my order*{refFolio}\n\nCustomer: {cN}{vehL}\nQuote: {url}',
+    'wa.garantia': '🛡️ *Warranty claim*{refFolio}\n\nCustomer: {cN}{vehL}\nQuote: {url}\n\nI would like to file a warranty claim for quote{refFolio}.',
+    'wa.retiro': '📦 *Parts pickup*{refFolio}\n\nCustomer: {cN}{vehL}\nQuote: {url}\n\nMy parts have arrived and I would like to arrange pickup.',
+    'wa.agendar': '📅 *Schedule installation*{refFolio}\n\nCustomer: {cN}{vehL}\nQuote: {url}\n\nMy parts have arrived and I would like to schedule the installation.',
+    'wa.comp_titulo': '✅ *Quote approval – Taller Ramos y Ramos*\n👤 Customer: {cN}',
+    'wa.comp_veh': '\n🚗 Vehicle: {veh}',
+    'wa.comp_repuestos': '\n\n*Approved parts:*\n',
+    'wa.comp_origen': '\n  → Origin: {o}',
+    'wa.comp_mas': '\n… and {n} more',
+    'wa.comp_total': '\n\n💰 *Approved total: {monto}*',
+    'wa.comp_monto': '\n💵 Amount to pay: {monto}',
+    'wa.comp_instalacion': '\n🔧 Installation: {v}',
+    'wa.comp_adjunto': '\n\nAttached is the transfer receipt.',
+    'wa.consulta_folio': 'Hello, I have a question about my quote {folio}',
+    'wa.consulta_nombre': 'Hello, I have a question about the quote under the name {nombre}',
+    'pago.adelanto': '50% deposit',
+    'pago.total': 'full payment',
+    'pago.otro': 'custom amount',
+    'cuentas.titulo': 'Payment instructions',
+    'cuentas.intro1': 'To proceed with the order, a <strong>50% deposit</strong> of the parts cost is required.',
+    'cuentas.intro2': 'The deposit or full payment can be made by <strong>bank transfer, SINPE or cash</strong>, and by <strong>credit card</strong> on business days at our location.',
+    'cuentas.bac_crc': '🏦 BAC account (colones)',
+    'cuentas.bac_usd': '💵 BAC account (US dollars)',
+    'cuentas.titular': 'Account holder:',
+    'cuentas.numero': 'Account no.:',
+    'tiempos.tu_pedido': 'your order',
+    'tiempos.titulo': '⏱️ Estimated delivery times',
+    'tiempos.usa': '<strong>United States</strong> — 7 to 15 business days',
+    'tiempos.europa': '<strong>Europe</strong> — 10 to 20 business days',
+    'tiempos.china': '<strong>China</strong> — 15 to 20 business days',
+    'tiempos.pie': '📦 Orders are placed on weekends.<br>\n      ⚠️ Parts prices do not include VAT.',
+    'venc.titulo': '⏳ Quote expired',
+    'venc.texto': 'This quote has expired. Prices may have changed. Message us to request an updated quote.',
+    'sel.folio_label': 'Quote',
+    'sel.fecha_linea': 'Quote dated <b style="color:var(--dim);font-weight:700;">{fecha}</b> · valid for <b style="color:var(--dim);font-weight:700;">30 days</b>',
+    'sel.no_proforma': '<b style="color:var(--warn);font-weight:700;">This quote is not an official pro forma invoice yet.</b> Choose the parts you want to approve and we will send you the final pro forma with the details.',
+    'sel.imagenes': 'Images',
+    'sel.instrucciones': '👇 <strong>Select which parts you want to approve</strong> and which option you prefer for each one.\n      When you are done, tap <strong>"Confirm and send to the workshop"</strong>.',
+    'sel.no_deseo': 'I don\'t want this part for now',
+    'sel.tu_seleccion': '✅ Your selection',
+    'sel.cuanto_abonar': '💳 How much would you like to pay now?',
+    'sel.adelanto_min': 'Minimum deposit (50%)',
+    'sel.pago_total': 'Full payment',
+    'sel.otro_monto': 'Other amount',
+    'sel.minimo': 'Minimum {monto}',
+    'sel.placeholder_monto': 'Enter the amount in colones',
+    'sel.error_monto': 'The amount must be between {min} and {max}.',
+    'sel.btn_confirmar': 'Confirm selection',
+    'sel.preview': '👁 Internal preview — approval is disabled',
+    'sel.selecciona_uno': 'Select at least one part to continue',
+    'footer.dudas': 'Questions about your quote?',
+    'footer.escribinos': 'Message us and we will be glad to help.',
+    'footer.btn': 'Message the workshop',
+    'modal.titulo': 'Parts not selected',
+    'modal.texto': 'The following parts were not selected and will be treated as declined:',
+    'modal.confirmar_q': 'Confirm and send?',
+    'modal.volver': 'Back',
+    'modal.confirmar': 'Confirm and send',
+    'mo.titulo': 'Labor',
+    'mo.texto': 'Would you like to add the labor cost to the official pro forma?',
+    'mo.si': 'Yes, include installation',
+    'mo.no': 'No, parts only',
+    'mo.volver': '← Back',
+    'trad.leyenda': 'Translated automatically',
+    'trad.ver_original': 'See original',
+    'trad.ver_traduccion': 'See translation',
+  },
+};
+
+let idioma = 'es';          // idioma vigente ('es' | 'en')
+let idiomaCliente = null;   // clientes.idioma del select (llega con la cotización)
+let vistaActual = null;     // re-render de la vista en pantalla (toggle de idioma)
+
+function idiomaOverride() {
+  try { const v = localStorage.getItem('cot_idioma'); return v === 'es' || v === 'en' ? v : null; } catch (_) { return null; }
+}
+function resolverIdioma() {
+  return idiomaOverride() || idiomaCliente || (/^en/i.test(navigator.language || '') ? 'en' : 'es');
+}
+// t(key, vars): interpolación {var}; valores-función reciben vars (plurales).
+function t(key, vars) {
+  const dic = I18N[idioma] || I18N.es;
+  const v = dic[key] != null ? dic[key] : (I18N.es[key] != null ? I18N.es[key] : key);
+  if (typeof v === 'function') return v(vars || {});
+  return vars ? v.replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? vars[k] : '')) : v;
+}
+// Prioridad del repuesto y estado de la opción son catálogos chicos del Taller:
+// se traducen por mapa; un valor desconocido se muestra tal cual.
+function prioLabel(p) {
+  const k = 'prio.' + String(p || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return I18N.es[k] != null ? t(k) : (p || '');
+}
+function estadoLabel(e) {
+  const k = 'estado.' + String(e || '').toLowerCase().trim();
+  return I18N.es[k] != null ? t(k) : (e || '');
+}
+function aplicarIdioma() {
+  document.documentElement.lang = idioma;
+  document.title = t('title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.lang === idioma));
+}
+function redibujar() { if (vistaActual) vistaActual(); }
+function setIdioma(l) {
+  if (l !== 'es' && l !== 'en') return;
+  try { localStorage.setItem('cot_idioma', l); } catch (_) {}
+  idioma = l;
+  aplicarIdioma();
+  redibujar();
+}
+// Primer render (spinner / errores): override o navegador. El idioma del
+// cliente llega con la cotización y ahí se fija el definitivo (cargar()).
+idioma = resolverIdioma();
+aplicarIdioma();
+document.getElementById('langToggle').addEventListener('click', e => {
+  const b = e.target.closest('button[data-lang]');
+  if (b) setIdioma(b.dataset.lang);
+});
 
 function fCRC(n) {
   return '₡' + Number(n||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
@@ -284,27 +661,28 @@ function snack(msg, ok=true) {
 }
 
 // Origen de una opción ('usa' | 'europa' | 'china'; default usa) — única fuente
-// de bandera (CSS .mf) y nombre. Mismo catálogo que lib/utils.js del Taller.
+// de bandera (CSS .mf) y nombre (I18N 'origen.*'). Mismo catálogo que lib/utils.js del Taller.
 const ORIGEN_INFO = {
-  usa:    { cls: 'us', nombre: 'Estados Unidos' },
-  europa: { cls: 'eu', nombre: 'Europa' },
-  china:  { cls: 'cn', nombre: 'China' },
+  usa:    { cls: 'us' },
+  europa: { cls: 'eu' },
+  china:  { cls: 'cn' },
 };
 const origenKey = o => (ORIGEN_INFO[o] ? o : 'usa');
 function flagHTML(origen) { return `<span class="mf ${ORIGEN_INFO[origenKey(origen)].cls}"></span>`; }
-function nombreOrigen(origen) { return ORIGEN_INFO[origenKey(origen)].nombre; }
+function nombreOrigen(origen) { return t('origen.' + origenKey(origen)); }
 
 // Fechas SIEMPRE en hora de Costa Rica (el navegador del cliente puede estar en
 // otra zona). Un 'YYYY-MM-DD' suelto (columna date, p. ej. fecha_agendado) se
 // arma como fecha civil: new Date('2026-08-25') sería medianoche UTC = el día
-// anterior en CR.
+// anterior en CR. Locale por idioma: es-CR "4 de septiembre de 2026" /
+// en-US "September 4, 2026" (mismo formato que los PDFs del Taller).
 const TZ_CR = 'America/Costa_Rica';
-function fechaCR(iso, opts = {}) {
+function fechaCR(iso, opts = {}, lang = idioma) {
   if (!iso) return '';
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
   const d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)) : new Date(iso);
   if (isNaN(d)) return '';
-  return d.toLocaleDateString('es-CR', { timeZone: TZ_CR, day: 'numeric', month: 'long', year: 'numeric', ...opts });
+  return d.toLocaleDateString(lang === 'en' ? 'en-US' : 'es-CR', { timeZone: TZ_CR, day: 'numeric', month: 'long', year: 'numeric', ...opts });
 }
 // Días civiles CR transcurridos desde `iso` hasta hoy (0 = hoy). null si no hay fecha.
 function diasDesde(iso) {
@@ -354,31 +732,37 @@ const cotId = params.get('id') || params.get('k');
 // Modo vista previa interna (?preview=1): no registra vista ni permite aprobar
 const isPreview = params.has('preview');
 
-function showError(txt) {
+function showError(key) {
+  vistaActual = () => showError(key);
   document.getElementById('appRoot').innerHTML = `
     <div class="empty">
       <div class="icon">⚠️</div>
-      <p>${esc(txt)}<br>Pedile a tu taller que te reenvíe el link.</p>
+      <p>${esc(t(key))}<br>${esc(t('error.reenviar'))}</p>
     </div>`;
 }
 
 async function cargar() {
-  if (!cotId) { showError('Link inválido o expirado.'); return; }
+  if (!cotId) { showError('error.link'); return; }
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cotId)) {
-    showError('Link inválido o expirado.');
+    showError('error.link');
     return;
   }
 
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(cotId)}&select=*,clientes(nombre,apellido),vehiculos(patente,modelo,anio,marca,version,color,vin)`,
+      `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(cotId)}&select=*,clientes(nombre,apellido,idioma),vehiculos(patente,modelo,anio,marca,version,color,vin)`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
     );
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     const row = rows[0];
-    if (!row) { showError('Cotización no encontrada.'); return; }
+    if (!row) { showError('error.no_encontrada'); return; }
     if (row.es_vip) document.getElementById('vipBadge').style.display = 'inline-block';
+
+    // Idioma definitivo: override del toggle > clientes.idioma > navegador.
+    idiomaCliente = row.clientes?.idioma === 'en' ? 'en' : row.clientes?.idioma === 'es' ? 'es' : null;
+    idioma = resolverIdioma();
+    aplicarIdioma();
 
     // Loguear apertura del cliente (fire-and-forget, no bloquea el render)
     if (!isPreview) {
@@ -449,11 +833,12 @@ async function cargar() {
 
     iniciar(payload);
   } catch(e) {
-    showError('No se pudo cargar la cotización. Intentá de nuevo.');
+    showError('error.cargar');
   }
 }
 
 function mostrarYaAprobado(row) {
+  vistaActual = () => mostrarYaAprobado(row);
   const clienteNombre = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || '';
   const fecha = fechaCR(row.cliente_aprobado_at);   // '' sin sello (aprobación manual del taller)
   const estado = row.estado || '';
@@ -481,7 +866,7 @@ function mostrarYaAprobado(row) {
 
   const seleccionHTML = pendienteAdelanto && aprobadosSel.length > 0 ? `
     <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-      <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">Resumen de tu pedido</div>
+      <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">${t('ap.resumen_pedido')}</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${aprobadosSel.map(({ rep, op }) => `
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
@@ -493,7 +878,7 @@ function mostrarYaAprobado(row) {
           </div>`).join('')}
       </div>
       ${row.con_instalacion != null ? `
-      <div style="font-size:12.5px;color:var(--muted);margin-top:10px;">${row.con_instalacion ? '🔧 Con instalación en el taller' : 'Solo repuestos'}</div>` : ''}
+      <div style="font-size:12.5px;color:var(--muted);margin-top:10px;">${row.con_instalacion ? t('ap.con_instalacion') : t('ap.solo_repuestos')}</div>` : ''}
     </div>` : '';
 
   // Botón "enviar comprobante" (solo casos con pago pendiente A1/A2) — gesto
@@ -503,7 +888,7 @@ function mostrarYaAprobado(row) {
       <a href="#" id="btnComprobante"
          style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
         <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
-        Enviar comprobante de pago
+        ${t('ap.enviar_comprobante')}
       </a>
     </div>`;
 
@@ -511,14 +896,14 @@ function mostrarYaAprobado(row) {
   let heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
       <div style="font-size:3rem;margin-bottom:12px;">✅</div>
-      <h2>¡Cotización aprobada!</h2>
+      <h2>${t('ap.hero_aprobada')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
-      ${fecha ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Aprobada el ${esc(fecha)}</p>` : ''}
+      ${fecha ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('ap.aprobada_el', { fecha: esc(fecha) })}</p>` : ''}
     </div>`;
   // Resumen de lo aprobado, reutilizable por las ramas de seguimiento.
   const resumenPedidoHTML = aprobadosSel.length > 0 ? `
     <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-      <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">Resumen de tu pedido</div>
+      <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">${t('ap.resumen_pedido')}</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${aprobadosSel.map(({ rep, op }) => `
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
@@ -530,13 +915,13 @@ function mostrarYaAprobado(row) {
           </div>`).join('')}
       </div>
       ${row.con_instalacion != null ? `
-      <div style="font-size:12.5px;color:var(--muted);margin-top:10px;">${row.con_instalacion ? '🔧 Con instalación en el taller' : 'Solo repuestos'}</div>` : ''}
+      <div style="font-size:12.5px;color:var(--muted);margin-top:10px;">${row.con_instalacion ? t('ap.con_instalacion') : t('ap.solo_repuestos')}</div>` : ''}
     </div>` : '';
   // Bloque "ya abonaste" + saldo (rama B y ramas de seguimiento)
   const abonoHTML = (notaSaldo = '') => adelantoPagado > 0 ? `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          ${cajaVerde('✓ Ya abonaste', adelantoPagado)}
+          ${cajaVerde(t('ap.ya_abonaste'), adelantoPagado)}
         </div>
         ${lineaSaldo}
         ${saldoTotal > 0 && notaSaldo ? `<div style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:6px;">${notaSaldo}</div>` : ''}
@@ -563,7 +948,7 @@ function mostrarYaAprobado(row) {
   // Informativa, NO alarmante: el saldo se paga contra entrega, no ahora.
   const lineaSaldo = saldoTotal > 0 ? `
         <div style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:14px;line-height:1.5;">
-          Saldo del total: <strong style="color:var(--muted);">${fCRC(saldoTotal)}</strong> — se paga contra entrega.
+          ${t('ap.saldo_linea', { monto: fCRC(saldoTotal) })}
         </div>` : '';
 
   let cuerpoHTML;
@@ -572,15 +957,15 @@ function mostrarYaAprobado(row) {
     const resumenHTML = total > 0 ? `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
         <div style="text-align:center;color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px;">
-          Tu selección quedó registrada. Para <strong style="color:var(--texto);">iniciar el pedido</strong>, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.
+          ${t('ap.a1_intro')}
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          ${cajaNeutra('Total aprobado', total)}
-          ${cajaRoja('Adelanto requerido 50%', adelantoReq)}
+          ${cajaNeutra(t('ap.total_aprobado'), total)}
+          ${cajaRoja(t('ap.adelanto_requerido'), adelantoReq)}
         </div>
       </div>` : `
       <div class="card" style="text-align:center;color:var(--muted);padding:24px;">
-        <p>Tu selección ya fue registrada. Para iniciar el pedido, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.</p>
+        <p>${t('ap.a1_intro_sin_total')}</p>
       </div>`;
     cuerpoHTML = seleccionHTML + resumenHTML + cuentasBancariasHTML() + tiemposEntregaHTML() + btnComprobanteHTML;
   } else if (pendienteAdelanto && faltaAdelanto > 0) {
@@ -588,11 +973,11 @@ function mostrarYaAprobado(row) {
     cuerpoHTML = `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
         <div style="text-align:center;color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px;">
-          Ya registramos tu abono. Para <strong style="color:var(--texto);">completar el adelanto</strong> transferí lo que falta a cualquiera de las cuentas de abajo.
+          ${t('ap.a2_intro')}
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          ${cajaVerde('✓ Ya abonaste', adelantoPagado)}
-          ${cajaRoja('Falta del adelanto', faltaAdelanto)}
+          ${cajaVerde(t('ap.ya_abonaste'), adelantoPagado)}
+          ${cajaRoja(t('ap.falta_adelanto'), faltaAdelanto)}
         </div>
         ${lineaSaldo}
       </div>` + cuentasBancariasHTML() + tiemposEntregaHTML() + btnComprobanteHTML;
@@ -602,29 +987,29 @@ function mostrarYaAprobado(row) {
     cuerpoHTML = seleccionHTML + `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
         <div style="background:color-mix(in srgb, var(--success) 10%, transparent);border:1px solid var(--success);border-radius:12px;padding:18px;text-align:center;">
-          <div style="font-size:16px;font-weight:700;color:var(--success);">✓ Adelanto cubierto</div>
-          <div style="font-size:13px;color:var(--texto);margin-top:6px;line-height:1.5;">El taller procederá con el pedido.</div>
+          <div style="font-size:16px;font-weight:700;color:var(--success);">${t('ap.adelanto_cubierto')}</div>
+          <div style="font-size:13px;color:var(--texto);margin-top:6px;line-height:1.5;">${t('ap.taller_procedera')}</div>
         </div>
         <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:12px;">
-          Ya abonaste: <strong style="color:var(--success);">${fCRC(adelantoPagado)}</strong>
+          ${t('ap.ya_abonaste_linea', { monto: fCRC(adelantoPagado) })}
         </div>
         ${lineaSaldo}
       </div>`;
   } else if (estado === 'en_camino') {
     // Rama C — pedido realizado, repuestos en camino.
     const dias = diasHabilesDesde(row.estado_changed_at);
-    const badge = dias == null ? '' : dias === 0 ? 'Pedido recién realizado' : `${dias} día${dias === 1 ? ' hábil' : 's hábiles'} en camino`;
+    const badge = dias == null ? '' : t('seg.badge_dias', { dias });
     const fPedido = fechaCR(row.estado_changed_at);
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
       <div style="font-size:3rem;margin-bottom:12px;">🚚</div>
-      <h2>¡Tu pedido ya fue realizado!</h2>
+      <h2>${t('seg.hero_pedido')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
-      ${fPedido ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Pedido realizado el ${esc(fPedido)}</p>` : ''}
+      ${fPedido ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('seg.pedido_el', { fecha: esc(fPedido) })}</p>` : ''}
       ${badge ? `<span class="badge-estado">${esc(badge)}</span>` : ''}
     </div>`;
     cuerpoHTML = resumenPedidoHTML
-      + tiemposEntregaHTML(origenesAprobados, '🔔 Te avisaremos cuando lleguen al taller.')
+      + tiemposEntregaHTML(origenesAprobados, t('seg.aviso_llegada'))
       + abonoHTML();
   } else if (estado === 'listo' || estado === 'agendado' || estado === 'en_taller') {
     // Rama D — repuestos en el taller: cita agendada o coordinar instalación/retiro.
@@ -635,9 +1020,9 @@ function mostrarYaAprobado(row) {
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
       <div style="font-size:3rem;margin-bottom:12px;">${enTaller ? '🔧' : '📦'}</div>
-      <h2>${enTaller ? 'Estamos trabajando en tu vehículo' : '¡Tus repuestos ya están en el taller!'}</h2>
+      <h2>${enTaller ? t('seg.hero_en_taller') : t('seg.hero_listo')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
-      ${fLlegada ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Llegaron el ${esc(fLlegada)}</p>` : ''}
+      ${fLlegada ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('seg.llegaron_el', { fecha: esc(fLlegada) })}</p>` : ''}
     </div>`;
     const retiro = row.con_instalacion === false;
     let citaHTML;
@@ -647,23 +1032,23 @@ function mostrarYaAprobado(row) {
       // fecha_agendado es DATE (sin hora): solo fecha civil CR.
       citaHTML = `
       <div style="background:var(--card);border:1px solid var(--success);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
-        <div style="font-size:11px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">📅 Tu cita</div>
+        <div style="font-size:11px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">${t('seg.tu_cita')}</div>
         <div style="font-family:'Titillium Web',sans-serif;font-size:20px;color:var(--texto);text-transform:capitalize;">${esc(fechaCR(row.fecha_agendado, { weekday: 'long' }))}</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:8px;">Te esperamos en el taller.</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:8px;">${t('seg.te_esperamos')}</div>
       </div>`;
     } else {
       citaHTML = `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
-        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">${retiro ? 'Podés pasar a retirarlos' : 'Coordinemos la instalación'}</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">${retiro ? 'Escribinos para coordinar el día y la hora de retiro.' : 'Escribinos para agendar el día y la hora de la instalación.'}</div>
+        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">${retiro ? t('seg.retiro_titulo') : t('seg.instal_titulo')}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">${retiro ? t('seg.retiro_texto') : t('seg.instal_texto')}</div>
         <a href="#" id="btnAgendar"
            style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
-          ${retiro ? '💬 Coordinar retiro por WhatsApp' : '📅 Agendar por WhatsApp'}
+          ${retiro ? t('seg.btn_retiro') : t('seg.btn_agendar')}
         </a>
       </div>`;
     }
     cuerpoHTML = resumenPedidoHTML + citaHTML
-      + abonoHTML(enTaller ? 'El saldo se cancela al retirar el vehículo.' : `El saldo se cancela al momento de la ${retiro ? 'entrega' : 'instalación'}.`);
+      + abonoHTML(enTaller ? t('seg.saldo_retirar') : retiro ? t('seg.saldo_entrega') : t('seg.saldo_instalacion'));
   } else {
     // Rama E — cierre (cobrado / perdido, sin distinguir). También es el
     // fallback de cualquier estado no contemplado: hero de cierre sin cards.
@@ -672,10 +1057,10 @@ function mostrarYaAprobado(row) {
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
       <div style="font-size:3rem;margin-bottom:12px;">✅</div>
-      <h2>Transacción finalizada</h2>
+      <h2>${t('cierre.hero')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
-      <p style="color:var(--texto);font-size:14px;margin-top:8px;">Gracias por confiar en Ramos y Ramos</p>
-      ${fCierre ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">Cerrada el ${esc(fCierre)}</p>` : ''}
+      <p style="color:var(--texto);font-size:14px;margin-top:8px;">${t('cierre.gracias')}</p>
+      ${fCierre ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('cierre.cerrada_el', { fecha: esc(fCierre) })}</p>` : ''}
     </div>`;
     if (!esCierre) {
       cuerpoHTML = '';
@@ -683,14 +1068,14 @@ function mostrarYaAprobado(row) {
       // Resumen con garantía por repuesto (solo si la opción aprobada la trae)
       const resumenCierreHTML = aprobadosSel.length > 0 ? `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">Resumen de tu pedido</div>
+        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">${t('ap.resumen_pedido')}</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${aprobadosSel.map(({ rep, op }) => `
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
               <div style="color:var(--texto);">
                 ${esc(rep.nombre || '')}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
                 ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([op.calidad, op.marca].filter(Boolean).join(' · '))}</div>` : ''}
-                ${op && String(op.garantia || '').trim() ? `<div style="color:var(--success);font-size:12px;margin-top:2px;">🛡️ Garantía: ${esc(op.garantia)}</div>` : ''}
+                ${op && String(op.garantia || '').trim() ? `<div style="color:var(--success);font-size:12px;margin-top:2px;">${t('garantia_prefijo')}${esc(op.garantia)}</div>` : ''}
               </div>
               ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
             </div>`).join('')}
@@ -705,32 +1090,32 @@ function mostrarYaAprobado(row) {
         const tot = Number(row.total_aprobado) || 0;
         pagoHTML = `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Resumen de pago</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">${t('cierre.resumen_pago')}</div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          ${cajaNeutra('Total', tot)}
+          ${cajaNeutra(t('cierre.total'), tot)}
           <div style="flex:1;min-width:130px;background:color-mix(in srgb, var(--success) 8%, transparent);border:1px solid var(--success);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">Estado</div>
-            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--success);font-weight:700;">✓ Pagado</div>
+            <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">${t('cierre.estado')}</div>
+            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--success);font-weight:700;">${t('cierre.pagado')}</div>
           </div>
         </div>
       </div>`;
       }
       const garantiaHTML = `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
-        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">¿Algún problema con tus repuestos?</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Escribinos y revisamos tu caso.</div>
+        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">${t('cierre.garantia_titulo')}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">${t('cierre.garantia_texto')}</div>
         <a href="#" id="btnGarantia"
            style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
-          🛡️ Reclamar garantía por WhatsApp
+          ${t('cierre.btn_garantia')}
         </a>
       </div>`;
       const reviewHTML = GOOGLE_REVIEW_URL ? `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
-        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">¿Cómo te fue?</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Tu opinión nos ayuda a seguir mejorando.</div>
+        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">${t('cierre.review_titulo')}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">${t('cierre.review_texto')}</div>
         <a href="${esc(GOOGLE_REVIEW_URL)}" target="_blank" rel="noopener"
            style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--navy);color:var(--card);border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
-          ⭐ Dejanos tu reseña en Google
+          ${t('cierre.btn_review')}
         </a>
       </div>` : '';
       // perdido: sin garantía (no hubo entrega al cliente)
@@ -742,19 +1127,19 @@ function mostrarYaAprobado(row) {
     <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
         ${pendienteAdelanto
-          ? 'Si necesitás modificar tu selección, contactanos. El taller puede reabrir tu cotización para que la apruebes nuevamente.'
-          : '¿Tenés dudas sobre tu pedido? Escribinos y con gusto te ayudamos.'}
+          ? t('contacto.modificar')
+          : t('contacto.dudas')}
       </div>
       <a href="#" id="btnContactarTaller"
          style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--navy);color:var(--card);border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">
-        ${pendienteAdelanto ? '📞 Necesito modificar mi selección' : '💬 Consultar por WhatsApp'}
+        ${pendienteAdelanto ? t('contacto.btn_modificar') : t('contacto.btn_consultar')}
       </a>
     </div>`;
 
   document.getElementById('appRoot').innerHTML = heroHTML + cuerpoHTML + contactoHTML;
 
   setTimeout(() => {
-    const cN = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || 'Cliente';
+    const cN = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || t('wa.cliente_default');
     const veh = [row.vehiculos?.patente, row.vehiculos?.modelo, row.vehiculos?.anio].filter(Boolean).join(' · ') || row.cliente_vehiculo || '';
 
     const btn = document.getElementById('btnContactarTaller');
@@ -762,11 +1147,12 @@ function mostrarYaAprobado(row) {
       e.preventDefault();
       const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
       const refFolio = folio ? ` ${folio}` : '';
+      const vars = { cN, vehL: veh ? t('wa.veh_linea', { veh }) : '', url: cotizacionUrl, refFolio };
       const mensaje = pendienteAdelanto
-        ? `🔄 *Solicitud de modificación*\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nNecesito hacer cambios en mi selección antes del pedido.`
+        ? t('wa.modificacion', vars)
         : estado === 'en_camino'
-          ? `💬 *Consulta sobre mi pedido en camino*${refFolio}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nMi pedido está en camino y tengo una consulta.`
-          : `💬 *Consulta sobre mi pedido*${refFolio}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}`;
+          ? t('wa.consulta_camino', vars)
+          : t('wa.consulta', vars);
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
 
@@ -775,7 +1161,7 @@ function mostrarYaAprobado(row) {
     if (btnG) btnG.addEventListener('click', function(e) {
       e.preventDefault();
       const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
-      const mensaje = `🛡️ *Reclamo de garantía*${folio ? ` ${folio}` : ''}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nQuiero hacer un reclamo de garantía de la cotización${folio ? ` ${folio}` : ''}.`;
+      const mensaje = t('wa.garantia', { cN, vehL: veh ? t('wa.veh_linea', { veh }) : '', url: cotizacionUrl, refFolio: folio ? ` ${folio}` : '' });
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
 
@@ -785,11 +1171,11 @@ function mostrarYaAprobado(row) {
       e.preventDefault();
       const cotizacionUrl = `https://cotizaciones.ramosyramoscr.com/?id=${row.id}`;
       const retiro = row.con_instalacion === false;
-      const mensaje = `${retiro ? '📦 *Retiro de repuestos*' : '📅 *Agendar instalación*'}${folio ? ` ${folio}` : ''}\n\nCliente: ${cN}${veh ? `\nVehículo: ${veh}` : ''}\nCotización: ${cotizacionUrl}\n\nMis repuestos ya llegaron, quiero ${retiro ? 'coordinar el retiro' : 'agendar la instalación'}.`;
+      const mensaje = t(retiro ? 'wa.retiro' : 'wa.agendar', { cN, vehL: veh ? t('wa.veh_linea', { veh }) : '', url: cotizacionUrl, refFolio: folio ? ` ${folio}` : '' });
       window.open(`https://wa.me/50688872667?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
 
-    const PAGO_LABELS = { adelanto: 'adelanto 50%', total: 'pago total', otro: 'monto personalizado' };
+    const PAGO_LABELS = { adelanto: t('pago.adelanto'), total: t('pago.total'), otro: t('pago.otro') };
     const btnC = document.getElementById('btnComprobante');
     if (btnC) btnC.addEventListener('click', function(e) {
       e.preventDefault();
@@ -797,27 +1183,27 @@ function mostrarYaAprobado(row) {
       // reconstruido de aprobadosSel. Históricas: sin selección/decisión → se
       // omiten esas líneas y queda el resumen corto de siempre.
       const lineas = aprobadosSel.map(({ rep, op }) => {
-        let l = `• ${rep.nombre || 'Repuesto'}${(rep.cantidad || 1) > 1 ? ' (×' + rep.cantidad + ')' : ''}`;
+        let l = `• ${rep.nombre || t('wa.repuesto_default')}${(rep.cantidad || 1) > 1 ? ' (×' + rep.cantidad + ')' : ''}`;
         if (op) {
           const specs = [op.calidad, op.estado].filter(Boolean).join(' / ');
           if (specs || op.marca) l += `\n  → ${specs}${op.marca ? (specs ? ' · ' : '') + op.marca : ''}`;
-          l += `\n  → Origen: ${nombreOrigen(op.origen)}`;
+          l += t('wa.comp_origen', { o: nombreOrigen(op.origen) });
           if (op.garantia) l += `\n  → 🛡️ ${op.garantia}`;
           if (op.precioFinalCRC != null) l += `\n  → ${fCRC(op.precioFinalCRC)}`;
         }
         return l;
       });
       const armar = (incluidas) => {
-        let m = `✅ *Aprobación de cotización – Taller Ramos y Ramos*\n👤 Cliente: ${cN}`;
-        if (veh) m += `\n🚗 Vehículo: ${veh}`;
+        let m = t('wa.comp_titulo', { cN });
+        if (veh) m += t('wa.comp_veh', { veh });
         if (incluidas.length > 0) {
-          m += `\n\n*Repuestos aprobados:*\n${incluidas.join('\n')}`;
-          if (incluidas.length < lineas.length) m += `\n… y ${lineas.length - incluidas.length} más`;
+          m += t('wa.comp_repuestos') + incluidas.join('\n');
+          if (incluidas.length < lineas.length) m += t('wa.comp_mas', { n: lineas.length - incluidas.length });
         }
-        m += `\n\n💰 *Total aprobado: ${fCRC(total)}*`;
-        if (row.monto_pago_elegido != null) m += `\n💵 Monto a pagar: ${fCRC(row.monto_pago_elegido)}${row.pago_elegido ? ` (${PAGO_LABELS[row.pago_elegido] || row.pago_elegido})` : ''}`;
-        if (row.con_instalacion != null) m += `\n🔧 Instalación: ${row.con_instalacion ? 'Sí' : 'No'}`;
-        m += `\n\nAdjunto el comprobante de la transferencia.`;
+        m += t('wa.comp_total', { monto: fCRC(total) });
+        if (row.monto_pago_elegido != null) m += t('wa.comp_monto', { monto: fCRC(row.monto_pago_elegido) }) + (row.pago_elegido ? ` (${PAGO_LABELS[row.pago_elegido] || row.pago_elegido})` : '');
+        if (row.con_instalacion != null) m += t('wa.comp_instalacion', { v: row.con_instalacion ? t('si') : t('no') });
+        m += t('wa.comp_adjunto');
         return m;
       };
       // wa.me tolera ~2000 chars de URL: truncar la lista ("… y N más")
@@ -843,19 +1229,19 @@ function cuentasBancariasHTML() {
   <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:20px;">
     <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
       <span style="display:inline-block;width:3px;height:16px;background:var(--rojo);border-radius:2px;"></span>
-      Instrucciones de pago
+      ${t('cuentas.titulo')}
     </div>
     <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;">
-      Para proceder con el pedido se requiere el <strong>50% del costo</strong> de los repuestos como adelanto.<br>
-      El adelanto o cancelación total se puede realizar por <strong>transferencia, SINPE o efectivo</strong>, y con <strong>tarjeta de crédito</strong> en días hábiles en nuestro establecimiento.
+      ${t('cuentas.intro1')}<br>
+      ${t('cuentas.intro2')}
     </div>
     <div class="pago-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
       <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">🏦 Cuenta BAC Colones</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">${t('cuentas.bac_crc')}</div>
         <div style="font-size:13px;line-height:2;color:var(--texto);">
-          <div><span style="color:var(--muted);">Titular:</span> Gustavo Adolfo Ramos Fallas</div>
+          <div><span style="color:var(--muted);">${t('cuentas.titular')}</span> Gustavo Adolfo Ramos Fallas</div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="color:var(--muted);">N° cuenta:</span> <strong>935377267</strong>
+            <span style="color:var(--muted);">${t('cuentas.numero')}</span> <strong>935377267</strong>
             <button onclick="copiarTexto('935377267', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px;font-size:12px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;">📋</button>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -865,11 +1251,11 @@ function cuentasBancariasHTML() {
         </div>
       </div>
       <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">💵 Cuenta BAC Dólares</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">${t('cuentas.bac_usd')}</div>
         <div style="font-size:13px;line-height:2;color:var(--texto);">
-          <div><span style="color:var(--muted);">Titular:</span> Gustavo Adolfo Ramos Fallas</div>
+          <div><span style="color:var(--muted);">${t('cuentas.titular')}</span> Gustavo Adolfo Ramos Fallas</div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="color:var(--muted);">N° cuenta:</span> <strong>940809213</strong>
+            <span style="color:var(--muted);">${t('cuentas.numero')}</span> <strong>940809213</strong>
             <button onclick="copiarTexto('940809213', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px;font-size:12px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;">📋</button>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -904,19 +1290,19 @@ function tiemposEntregaHTML(origenes = null, pie = null) {
     return `
       <div class="fila-tiempo${on ? ' aplica' : ''}" style="display:flex;align-items:center;gap:10px;font-size:13px;">
         <span class="mf ${cls}"></span>
-        <div>${txt}${on ? ' <span class="fila-tiempo-tag">tu pedido</span>' : ''}</div>
+        <div>${txt}${on ? ` <span class="fila-tiempo-tag">${t('tiempos.tu_pedido')}</span>` : ''}</div>
       </div>`;
   };
   return `
   <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:20px;">
-    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">⏱️ Tiempos estimados de entrega</div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">${t('tiempos.titulo')}</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      ${fila('usa', 'us', '<strong>Estados Unidos</strong> — 7 a 15 días hábiles')}
-      ${fila('europa', 'eu', '<strong>Europa</strong> — 10 a 20 días hábiles')}
-      ${fila('china', 'cn', '<strong>China</strong> — 15 a 20 días hábiles')}
+      ${fila('usa', 'us', t('tiempos.usa'))}
+      ${fila('europa', 'eu', t('tiempos.europa'))}
+      ${fila('china', 'cn', t('tiempos.china'))}
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--borde);font-size:12px;color:var(--muted);">
-      ${pie ? esc(pie) : '📦 Los pedidos se realizan los fines de semana.<br>\n      ⚠️ El costo de los repuestos no incluye IVA.'}
+      ${pie ? esc(pie) : t('tiempos.pie')}
     </div>
   </div>`;
 }
@@ -929,13 +1315,9 @@ function iniciar(payload) {
     && cliente.estado === 'cotizado';
   const bannerVencida = `
     <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:14px;padding:20px;margin-bottom:20px;">
-      <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1px;color:var(--warn);font-weight:700;text-transform:uppercase;margin-bottom:8px;">⏳ Cotización vencida</div>
-      <div style="font-size:14px;color:var(--texto);line-height:1.55;">Esta cotización venció. Los precios pueden haber cambiado. Escribinos para pedir una cotización actualizada.</div>
+      <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1px;color:var(--warn);font-weight:700;text-transform:uppercase;margin-bottom:8px;">${t('venc.titulo')}</div>
+      <div style="font-size:14px;color:var(--texto);line-height:1.55;">${t('venc.texto')}</div>
     </div>`;
-  const _headerSub = document.getElementById('headerSub');
-  if (_headerSub && cliente.nombre) _headerSub.textContent = 'Cotización confeccionada para ' + cliente.nombre;
-  const _folio = folioNum(cliente.numero);
-  document.title = (_folio ? _folio + ' · ' : '') + (cliente.nombre || 'Tu cotización') + ' – Taller Ramos y Ramos';
   const sel = new Array(reps.length).fill(null);
 
   function placaHTML(patente) {
@@ -972,29 +1354,33 @@ function iniciar(payload) {
     const modeloLinea = [modeloNombre, cliente.version, cliente.anio].filter(Boolean).join(' · ');
     const fechaCot = fechaCR(cliente.fechaCotizacion, { year: undefined });
     const folio = folioNum(cliente.numero);
+    // Subtítulo del header y <title> viven acá (y no en iniciar) para seguir al toggle de idioma.
+    const _headerSub = document.getElementById('headerSub');
+    if (_headerSub && cliente.nombre) _headerSub.textContent = t('header.sub_para', { nombre: cliente.nombre });
+    document.title = (folio ? folio + ' · ' : '') + (cliente.nombre || t('doc.title_fallback')) + ' – Taller Ramos y Ramos';
     const folioBlock = folio
-      ? `<div style="text-align:right;flex-shrink:0;"><div style="font-family:'Titillium Web',sans-serif;font-size:7.5px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:600;">Cotización</div><div style="font-family:'Titillium Web',sans-serif;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:0.5px;">${esc(folio)}</div></div>`
+      ? `<div style="text-align:right;flex-shrink:0;"><div style="font-family:'Titillium Web',sans-serif;font-size:7.5px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:600;">${t('sel.folio_label')}</div><div style="font-family:'Titillium Web',sans-serif;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:0.5px;">${esc(folio)}</div></div>`
       : '';
     const vehBlock = tieneVeh
       ? `<div style="font-family:'Cormorant',serif;font-size:22px;font-weight:600;color:var(--dim);${folio ? 'margin-top:8px;' : ''}line-height:1.15;">Mercedes-Benz</div>
       ${modeloLinea ? `<div style="font-family:'Cormorant',serif;font-size:30px;font-weight:500;color:var(--texto);line-height:1.15;">${esc(modeloLinea)}</div>` : ''}
       <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:12px;margin-top:16px;flex-wrap:wrap;">${placaHTML(cliente.patente)}</div>
       ${cliente.vin ? `<div style="margin-top:14px;font-family:'Titillium Web',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);">VIN · <span style="color:var(--dim);font-weight:600;letter-spacing:0.5px;">${esc(cliente.vin)}</span></div>` : ''}
-      ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--success);flex-shrink:0;"></span><span>Cotización del <b style="color:var(--dim);font-weight:700;">${esc(fechaCot)}</b> · válida por <b style="color:var(--dim);font-weight:700;">30 días</b></span></div>` : ''}`
+      ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--success);flex-shrink:0;"></span><span>${t('sel.fecha_linea', { fecha: esc(fechaCot) })}</span></div>` : ''}`
       : '';
     const heroCard = (folio || tieneVeh)
       ? `<div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-bottom:20px;">${folio ? `<div style="display:flex;justify-content:flex-end;">${folioBlock}</div>` : ''}${vehBlock}</div>`
       : '';
     const hero = `${heroCard}
     <div style="color:var(--dim);font-size:13px;line-height:1.55;padding-bottom:18px;border-bottom:1px solid var(--borde);margin-bottom:20px;">
-      <b style="color:var(--warn);font-weight:700;">Esta cotización aún no es una proforma oficial.</b> Elegí los repuestos que querés aprobar y te enviamos la proforma final con el detalle.
+      ${t('sel.no_proforma')}
     </div>`;
 
     const galeriaHTML = (Array.isArray(imagenesCliente) && imagenesCliente.length > 0)
       ? `<div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-bottom:20px;">
           <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
             <span style="display:inline-block;width:3px;height:16px;background:var(--rojo);border-radius:2px;"></span>
-            Imágenes
+            ${t('sel.imagenes')}
           </div>
           <div style="display:flex;flex-direction:column;gap:16px;">
             ${imagenesCliente.map(it => `
@@ -1008,8 +1394,7 @@ function iniciar(payload) {
 
     const instrucciones = `
     <div class="instrucciones">
-      👇 <strong>Seleccioná qué repuestos querés aprobar</strong> y cuál opción preferís para cada uno.
-      Cuando termines, tocá <strong>"Confirmar y enviar al taller"</strong>.
+      ${t('sel.instrucciones')}
     </div>`;
 
     const repsHTML = reps.map((r, ri) => {
@@ -1022,22 +1407,22 @@ function iniciar(payload) {
             <div class="cliente-repuesto-nombre">${esc(r.nombre)}${r.cantidad > 1 ? `<span style="font-size:13px;font-weight:500;color:var(--muted);margin-left:8px;">× ${r.cantidad}</span>` : ''}</div>
             ${r.nota ? `<div class="cliente-repuesto-nota">${esc(r.nota)}</div>` : ''}
           </div>
-          <span class="tag tag-${prioClass}">${esc(r.prioridad)}</span>
+          <span class="tag tag-${prioClass}">${esc(prioLabel(r.prioridad))}</span>
         </div>
         <div class="opciones-cliente">
           ${r.opciones.map((op, oi) => `
             <label class="opcion-cliente ${selIdx === oi ? 'seleccionada' : ''}" onclick="seleccionar(${ri},${oi})">
               <div class="radio-dot"></div>
               <div class="opcion-cliente-info">
-                <div class="opcion-cliente-titulo">${esc(op.calidad)} · ${esc(op.estado)}${op.marca ? ' · ' + esc(op.marca) : ''}</div>
-                <div class="opcion-cliente-meta">${flagHTML(op.origen)} ${nombreOrigen(op.origen)}${op.garantia ? ' · 🛡️ Garantía: ' + esc(op.garantia) : ''}</div>
+                <div class="opcion-cliente-titulo">${esc(op.calidad)} · ${esc(estadoLabel(op.estado))}${op.marca ? ' · ' + esc(op.marca) : ''}</div>
+                <div class="opcion-cliente-meta">${flagHTML(op.origen)} ${nombreOrigen(op.origen)}${op.garantia ? ' · ' + t('garantia_prefijo') + esc(op.garantia) : ''}</div>
               </div>
               <div class="opcion-cliente-precio">${fCRC(op.precioFinalCRC)}</div>
             </label>
           `).join('')}
           <label class="no-seleccionar ${selIdx === -1 ? 'seleccionada' : ''}" onclick="seleccionar(${ri},-1)">
             <div class="radio-dot" style="${selIdx === -1 ? 'border-color:var(--muted);background:var(--muted);' : ''}"></div>
-            <span>No deseo este repuesto por ahora</span>
+            <span>${t('sel.no_deseo')}</span>
           </label>
         </div>
       </div>`;
@@ -1051,7 +1436,7 @@ function iniciar(payload) {
       const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precioFinalCRC, 0);
       resumenHTML = `
       <div class="resumen-box">
-        <h3>✅ Tu selección</h3>
+        <h3>${t('sel.tu_seleccion')}</h3>
         ${aprobados.map(({r,oi}) => {
           const op = r.opciones[oi];
           return `
@@ -1059,56 +1444,56 @@ function iniciar(payload) {
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
               <div>
                 <div class="resumen-item-nombre">${esc(r.nombre)}${r.cantidad > 1 ? ` <span style="font-size:12px;font-weight:500;color:var(--muted);">× ${r.cantidad}</span>` : ''}</div>
-                <div class="resumen-item-det">${flagHTML(op.origen)} ${esc(op.calidad)} · ${esc(op.estado)}${op.marca?' · '+esc(op.marca):''}${op.garantia?' · 🛡️ '+esc(op.garantia):''}</div>
+                <div class="resumen-item-det">${flagHTML(op.origen)} ${esc(op.calidad)} · ${esc(estadoLabel(op.estado))}${op.marca?' · '+esc(op.marca):''}${op.garantia?' · 🛡️ '+esc(op.garantia):''}</div>
               </div>
               <div class="resumen-item-precio">${fCRC(op.precioFinalCRC)}</div>
             </div>
           </div>`;
         }).join('')}
         <div class="resumen-total">
-          <span>Total aprobado</span>
+          <span>${t('ap.total_aprobado')}</span>
           <span class="monto-total">${fCRC(total)}</span>
         </div>
 
         <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-top:12px;">
-          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">💳 ¿Cuánto deseás abonar?</div>
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">${t('sel.cuanto_abonar')}</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_adelanto">
               <input type="radio" name="pago_opt" value="adelanto" checked onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
               <div style="flex:1;">
-                <div style="font-weight:600;font-size:14px;">Adelanto mínimo (50%)</div>
+                <div style="font-weight:600;font-size:14px;">${t('sel.adelanto_min')}</div>
                 <div style="color:var(--success);font-family:'Titillium Web',sans-serif;font-size:20px;letter-spacing:1px;">${fCRC(Math.round(total * 0.5))}</div>
               </div>
             </label>
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_total">
               <input type="radio" name="pago_opt" value="total" onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
               <div style="flex:1;">
-                <div style="font-weight:600;font-size:14px;">Pago total</div>
+                <div style="font-weight:600;font-size:14px;">${t('sel.pago_total')}</div>
                 <div style="color:var(--success);font-family:'Titillium Web',sans-serif;font-size:20px;letter-spacing:1px;">${fCRC(total)}</div>
               </div>
             </label>
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_otro">
               <input type="radio" name="pago_opt" value="otro" onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
               <div style="flex:1;">
-                <div style="font-weight:600;font-size:14px;">Otro monto</div>
-                <div style="font-size:12px;color:var(--muted);">Mínimo ${fCRC(Math.round(total * 0.5))}</div>
+                <div style="font-weight:600;font-size:14px;">${t('sel.otro_monto')}</div>
+                <div style="font-size:12px;color:var(--muted);">${t('sel.minimo', { monto: fCRC(Math.round(total * 0.5)) })}</div>
               </div>
             </label>
             <div id="otro_monto_wrap" style="display:none;padding:0 4px;">
               <input id="inp_otro_monto" type="number" min="${Math.round(total*0.5)}" max="${total}" step="1000"
-                placeholder="Ingresá el monto en colones"
+                placeholder="${t('sel.placeholder_monto')}"
                 style="width:100%;background:var(--card);border:1px solid var(--borde);border-radius:8px;padding:10px;color:var(--texto);font-size:14px;">
-              <div id="inp_otro_error" style="font-size:12px;color:var(--rojo);margin-top:4px;display:none;">El monto debe ser entre ${fCRC(Math.round(total*0.5))} y ${fCRC(total)}.</div>
+              <div id="inp_otro_error" style="font-size:12px;color:var(--rojo);margin-top:4px;display:none;">${t('sel.error_monto', { min: fCRC(Math.round(total*0.5)), max: fCRC(total) })}</div>
             </div>
           </div>
         </div>
 
         <div class="row" style="margin-top:18px;">
           <button class="btn btn-navy" id="btnConfirmar" onclick="handleSubmitClick()"${isPreview ? ' disabled style="opacity:0.55;cursor:not-allowed;pointer-events:none;"' : ''}>
-            Confirmar selección
+            ${t('sel.btn_confirmar')}
           </button>
         </div>
-        ${isPreview ? '<p style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;">👁 Vista previa interna — la aprobación está deshabilitada</p>' : ''}
+        ${isPreview ? `<p style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;">${t('sel.preview')}</p>` : ''}
         <div id="confirmStatus" style="margin-top:10px;"></div>
       </div>`;
 
@@ -1119,21 +1504,21 @@ function iniciar(payload) {
       resumenHTML = `
       <div style="margin-top:20px;text-align:center;">
         <button class="btn btn-navy" disabled style="opacity:0.8;cursor:not-allowed;pointer-events:none;">
-          Confirmar selección
+          ${t('sel.btn_confirmar')}
         </button>
-        <p style="font-size:13px;color:var(--muted);margin-top:8px;">Seleccioná al menos un repuesto para continuar</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:8px;">${t('sel.selecciona_uno')}</p>
       </div>`;
     }
 
     const consultaMsg = folio
-      ? `Hola, tengo una consulta sobre mi cotización ${folio}`
-      : `Hola, tengo una consulta sobre mi cotización a nombre de ${cliente.nombre}`;
+      ? t('wa.consulta_folio', { folio })
+      : t('wa.consulta_nombre', { nombre: cliente.nombre });
     const consultaWa = 'https://wa.me/50683439257?text=' + encodeURIComponent(consultaMsg);
     const footer = `
     <div style="border-top:1px solid var(--borde);margin-top:20px;padding-top:22px;text-align:center;">
-      <div style="font-size:15px;font-weight:700;color:var(--texto);">¿Tenés dudas sobre tu cotización?</div>
-      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">Escribinos y con gusto te ayudamos.</div>
-      <div style="margin-top:14px;"><a href="${consultaWa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:11px 20px;min-height:44px;box-sizing:border-box;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Escribir al taller</a></div>
+      <div style="font-size:15px;font-weight:700;color:var(--texto);">${t('footer.dudas')}</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">${t('footer.escribinos')}</div>
+      <div style="margin-top:14px;"><a href="${consultaWa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:11px 20px;min-height:44px;box-sizing:border-box;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>${t('footer.btn')}</a></div>
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:16px;">Taller Ramos y Ramos · San José, Costa Rica</div>
     </div>`;
     document.getElementById('appRoot').innerHTML = hero + galeriaHTML + (vencida ? bannerVencida : instrucciones) + repsHTML + (vencida ? '' : resumenHTML) + tiemposEntregaHTML() + footer;
@@ -1174,15 +1559,15 @@ function iniciar(payload) {
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
     overlay.innerHTML = `
       <div id="modalContent" style="background:var(--card);border:1px solid var(--borde);border-radius:12px;padding:24px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
-        <div style="font-weight:600;font-size:17px;color:var(--texto);margin-bottom:14px;">Repuestos sin seleccionar</div>
-        <p style="font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Los siguientes repuestos no fueron seleccionados y se tomarán como rechazados:</p>
+        <div style="font-weight:600;font-size:17px;color:var(--texto);margin-bottom:14px;">${t('modal.titulo')}</div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.5;">${t('modal.texto')}</p>
         <ul style="padding-left:20px;color:var(--texto);line-height:1.8;margin:0 0 4px;">
           ${unmarked.map(n => `<li>${esc(n)}</li>`).join('')}
         </ul>
-        <p style="margin-top:18px;font-weight:500;color:var(--texto);font-size:15px;">¿Confirmar y enviar?</p>
+        <p style="margin-top:18px;font-weight:500;color:var(--texto);font-size:15px;">${t('modal.confirmar_q')}</p>
         <div id="modalBtnRow" style="margin-top:22px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
-          <button id="btnModalVolver" style="background:var(--card2);color:var(--texto);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;min-width:100px;">Volver</button>
-          <button id="btnModalConfirmar" style="background:var(--rojo);color:var(--card);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:600;min-width:140px;">Confirmar y enviar</button>
+          <button id="btnModalVolver" style="background:var(--card2);color:var(--texto);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;min-width:100px;">${t('modal.volver')}</button>
+          <button id="btnModalConfirmar" style="background:var(--rojo);color:var(--card);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:600;min-width:140px;">${t('modal.confirmar')}</button>
         </div>
       </div>`;
 
@@ -1209,12 +1594,12 @@ function iniciar(payload) {
     modal.innerHTML = `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:16px;padding:28px;max-width:400px;width:100%;text-align:center;">
         <div style="font-size:2rem;margin-bottom:12px;">🔧</div>
-        <div style="font-family:'Titillium Web',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:10px;">Mano de obra</div>
-        <p style="font-size:14px;color:var(--texto);line-height:1.6;margin-bottom:24px;">¿Deseás agregar el costo de mano de obra a la proforma oficial?</p>
+        <div style="font-family:'Titillium Web',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:10px;">${t('mo.titulo')}</div>
+        <p style="font-size:14px;color:var(--texto);line-height:1.6;margin-bottom:24px;">${t('mo.texto')}</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <button onclick="procesarAprobacion(true)" style="background:var(--rojo);color:var(--card);border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">Sí, incluir instalación</button>
-          <button onclick="procesarAprobacion(false)" style="background:var(--card2);color:var(--texto);border:1px solid var(--borde);border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">No, solo los repuestos</button>
-          <button onclick="document.getElementById('modalInstalacion').remove()" style="background:transparent;color:var(--muted);border:none;border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">← Volver</button>
+          <button onclick="procesarAprobacion(true)" style="background:var(--rojo);color:var(--card);border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">${t('mo.si')}</button>
+          <button onclick="procesarAprobacion(false)" style="background:var(--card2);color:var(--texto);border:1px solid var(--borde);border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">${t('mo.no')}</button>
+          <button onclick="document.getElementById('modalInstalacion').remove()" style="background:transparent;color:var(--muted);border:none;border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">${t('mo.volver')}</button>
         </div>
       </div>`;
     // Cerrar tocando el fondo: solo si el tap fue en el overlay mismo,
@@ -1246,7 +1631,7 @@ function iniciar(payload) {
     const btn = document.getElementById('btnConfirmar');
     const status = document.getElementById('confirmStatus');
     if (btn) btn.disabled = true;
-    if (status) status.innerHTML = `<p style="color:var(--muted);font-size:13px;">⏳ Guardando tu selección...</p>`;
+    if (status) status.innerHTML = `<p style="color:var(--muted);font-size:13px;">${t('guardando')}</p>`;
 
     try {
       const clienteSeleccion = sel.map((oi, ri) => {
@@ -1264,7 +1649,7 @@ function iniciar(payload) {
           const [fresh] = await chkRes.json();
           if (fresh && (fresh.cliente_aprobado_at || ALREADY_APPROVED.includes(fresh.estado))) {
             if (btn) btn.disabled = false;
-            alert('Esta cotización ya fue aprobada. Recargá la página para ver el estado actualizado.');
+            alert(t('alert.ya_aprobada'));
             window.location.reload();
             return;
           }
@@ -1315,7 +1700,7 @@ function iniciar(payload) {
       // por WhatsApp ahora es un botón de esa pantalla — sin WA automático.
       try {
         const rres = await fetch(
-          `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}&select=*,clientes(nombre,apellido),vehiculos(patente,modelo,anio,marca,version,color,vin)`,
+          `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}&select=*,clientes(nombre,apellido,idioma),vehiculos(patente,modelo,anio,marca,version,color,vin)`,
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
         );
         const [rrow] = await rres.json();
@@ -1326,11 +1711,12 @@ function iniciar(payload) {
         window.location.reload();  // cargar() bifurca solo a la pantalla de aprobado
       }
     } catch(e) {
-      if (status) status.innerHTML = `<p style="color:var(--rojo);font-size:13px;">⚠️ Error al guardar: ${esc(e.message)}</p>`;
+      if (status) status.innerHTML = `<p style="color:var(--rojo);font-size:13px;">${t('error.guardar', { msg: esc(e.message) })}</p>`;
       if (btn) btn.disabled = false;
     }
   };
 
+  vistaActual = render;
   render();
 }
 </script>
