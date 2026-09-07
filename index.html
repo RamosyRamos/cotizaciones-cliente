@@ -447,7 +447,10 @@ const I18N = {
     'venc.titulo': 'Cotización vencida',
     'venc.texto': 'Esta cotización venció. Los precios pueden haber cambiado. Escribinos para pedir una cotización actualizada.',
     'sel.folio_label': 'Cotización',
-    'sel.fecha_linea': 'Cotización del <b style="color:var(--texto);font-weight:700;">{fecha}</b> · válida por <b style="color:var(--texto);font-weight:700;">30 días</b>',
+    'sel.fecha_linea': 'Cotización del <b style="color:var(--texto);font-weight:700;">{fecha}</b> · válida hasta el <b style="color:var(--texto);font-weight:700;">{vence}</b>',
+    'sel.dia': 'día',
+    'sel.dias': 'días',
+    'sel.vence_pronto': 'Vence en <b style="color:var(--alerta);font-weight:700;">{n} {dias}</b> — aprobá antes del {vence} para asegurar estos precios.',
     'sel.no_proforma': '<b>Esta cotización aún no es una proforma oficial.</b> Elegí los repuestos que querés aprobar y te enviamos la proforma final con el detalle.',
     'sel.imagenes': 'Imágenes',
     'sel.instrucciones': '<strong>Seleccioná qué repuestos querés aprobar</strong> y cuál opción preferís para cada uno.\n      Cuando termines, tocá <strong>"Confirmar selección"</strong>.',
@@ -610,7 +613,10 @@ const I18N = {
     'venc.titulo': 'Quote expired',
     'venc.texto': 'This quote has expired. Prices may have changed. Message us to request an updated quote.',
     'sel.folio_label': 'Quote',
-    'sel.fecha_linea': 'Quote dated <b style="color:var(--texto);font-weight:700;">{fecha}</b> · valid for <b style="color:var(--texto);font-weight:700;">30 days</b>',
+    'sel.fecha_linea': 'Quote dated <b style="color:var(--texto);font-weight:700;">{fecha}</b> · valid until <b style="color:var(--texto);font-weight:700;">{vence}</b>',
+    'sel.dia': 'day',
+    'sel.dias': 'days',
+    'sel.vence_pronto': 'Expires in <b style="color:var(--alerta);font-weight:700;">{n} {dias}</b> — approve before {vence} to lock in these prices.',
     'sel.no_proforma': '<b>This quote is not an official pro forma invoice yet.</b> Choose the parts you want to approve and we will send you the final pro forma with the details.',
     'sel.imagenes': 'Images',
     'sel.instrucciones': '<strong>Select which parts you want to approve</strong> and which option you prefer for each one.\n      When you are done, tap <strong>"Confirm selection"</strong>.',
@@ -1456,9 +1462,13 @@ function iniciar(payload) {
   // MUESTRA en el encabezado sigue siendo la de la cotización (fechaCotizacion).
   // Bloquea la aprobación; no toca la vista "ya aprobada".
   const vigenciaDesde = cliente.vigenciaDesde || cliente.fechaCotizacion;
-  const vencida = !!vigenciaDesde
-    && (new Date(vigenciaDesde).getTime() + 30*24*60*60*1000) < Date.now()
-    && cliente.estado === 'cotizado';
+  const venceAt = vigenciaDesde ? new Date(vigenciaDesde).getTime() + 30*24*60*60*1000 : null;
+  const vencida = !!venceAt && venceAt < Date.now() && cliente.estado === 'cotizado';
+  // Días completos que faltan (ceil: menos de 24 h restantes ya cuenta como 1).
+  // El aviso ámbar sale en la última semana; vencida tiene su propio banner.
+  const diasParaVencer = venceAt ? Math.ceil((venceAt - Date.now()) / 86400000) : null;
+  const venceCerca = !vencida && cliente.estado === 'cotizado'
+    && diasParaVencer !== null && diasParaVencer > 0 && diasParaVencer <= 7;
   const bannerVencida = `
     <div class="card barra-alerta">
       <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1px;color:var(--alerta);font-weight:700;text-transform:uppercase;margin-bottom:8px;">${t('venc.titulo')}</div>
@@ -1499,6 +1509,8 @@ function iniciar(payload) {
     const modeloNombre = (cliente.modelo || '').replace(/\s*\d{4}\s*[-–]\s*(\d{4}|presente|present|actual|hoy)?\s*$/i, '').trim();
     const modeloLinea = [modeloNombre, cliente.version, cliente.anio].filter(Boolean).join(' · ');
     const fechaCot = fechaCR(cliente.fechaCotizacion, { year: undefined });
+    // Formateada acá (y no arriba) porque fechaCR sigue al toggle de idioma.
+    const venceTxt = venceAt ? fechaCR(new Date(venceAt).toISOString(), { year: undefined }) : '';
     const folio = folioNum(cliente.numero);
     // Subtítulo del header y <title> viven acá (y no en iniciar) para seguir al toggle de idioma.
     const _headerSub = document.getElementById('headerSub');
@@ -1512,12 +1524,18 @@ function iniciar(payload) {
       ${modeloLinea ? `<div style="font-family:'Cormorant',serif;font-size:30px;font-weight:500;color:var(--texto);line-height:1.15;">${esc(modeloLinea)}</div>` : ''}
       <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:12px;margin-top:16px;flex-wrap:wrap;">${placaHTML(cliente.patente)}</div>
       ${cliente.vin ? `<div style="margin-top:14px;font-family:'Titillium Web',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);">VIN · <span style="color:var(--texto);font-weight:600;letter-spacing:0.5px;">${esc(cliente.vin)}</span></div>` : ''}
-      ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--ok);flex-shrink:0;"></span><span>${t('sel.fecha_linea', { fecha: esc(fechaCot) })}</span></div>` : ''}`
+      ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--ok);flex-shrink:0;"></span><span>${t('sel.fecha_linea', { fecha: esc(fechaCot), vence: esc(venceTxt) })}</span></div>` : ''}`
       : '';
     const heroCard = (folio || tieneVeh)
       ? `<div class="card">${folio ? `<div style="display:flex;justify-content:flex-end;">${folioBlock}</div>` : ''}${vehBlock}</div>`
       : '';
-    const hero = `${heroCard}
+    // Aviso de vigencia próxima: línea ámbar (barra izquierda, sin fondo) entre
+    // el encabezado y la nota de "no proforma". Vencida ya tiene su banner.
+    const avisoVigencia = venceCerca ? `
+    <div class="nota alerta" style="margin-bottom:16px;font-size:13px;">
+      ${t('sel.vence_pronto', { n: diasParaVencer, dias: t(diasParaVencer === 1 ? 'sel.dia' : 'sel.dias'), vence: esc(venceTxt) })}
+    </div>` : '';
+    const hero = `${heroCard}${avisoVigencia}
     <div class="nota-proforma">
       ${t('sel.no_proforma')}
     </div>`;
