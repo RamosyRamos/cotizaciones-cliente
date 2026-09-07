@@ -18,44 +18,40 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --fondo:    #E6E4DB;
-      --negro:    #1A1A1D;
-      --card:     #FCFBF8;
-      --card2:    #F2F0E9;
-      --borde:    #D6D3C8;
-      --borde-activo: #444;
-      --texto:    #1A1A1D;
-      --muted:    #8A8C86;
-      --success:  #1F7A4D;
-      --rojo:     #B83A2E;
-      --rojo-dark:#8F2A20;
-      --rojo-glow:rgba(184,58,46,0.10);
-      --navy:     #15225F;
-      --dim:      #5C5C62;
-      --line2:    #E4E1D8;
-      --warn:        #8A5A0A;
-      --warn-bg:     #FBF3E0;
-      --warn-border: #D9B870;
-      --crit-bg:      #F7E0DC;
-      --crit-border:  #D99B92;
-      --ok-tag-bg:    #E0F0E6;
-      --ok-tag-border:#9BCBAE;
+      --bg:     #F2F3F5;
+      --bg2:    #ECEEF1;
+      --bg3:    #E2E5EA;
+      --borde2: rgba(31,41,51,0.30);
+      --card:   #FFFFFF;
+      --borde:  #D5D9DF;
+      --texto:  #1F2933;
+      --muted:  #5C6470;
+      --marca:  #B83A2E;
+      --azul:   #15225F;
+      --oro:    #8A6A1F;
+      --ok:     #1E7F4F;
+      --alerta: #B54708;
+      --sombra: 0 1px 2px rgba(0,0,0,.06);
+      --radio:  8px;
+      --mono:   'IBM Plex Mono','SFMono-Regular',Menlo,Consolas,monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Titillium Web', sans-serif; background: var(--fondo); color: var(--texto); min-height: 100vh; }
+    body { font-family: 'Titillium Web', sans-serif; background: var(--bg); color: var(--texto); min-height: 100vh; font-variant-numeric: tabular-nums; }
 
     .header {
       background: var(--card);
       padding: 16px 24px; display: flex; align-items: center; gap: 14px;
       position: sticky; top: 0; z-index: 100;
+      box-shadow: var(--sombra);
     }
+    /* Único acento de marca: la línea azul → rojo bajo el header (degradado original) */
     .header::after {
       content: ''; position: absolute; left: 0; right: 0; bottom: 0;
-      height: 3px; background: linear-gradient(90deg, var(--navy), var(--rojo) 55%, transparent);
+      height: 3px; background: linear-gradient(90deg, var(--azul), var(--marca) 55%, transparent);
     }
     .logo {
       width: 44px; height: 44px;
-      border-radius: 10px; flex-shrink: 0;
+      border-radius: var(--radio); flex-shrink: 0;
       object-fit: contain;
     }
     .header h1 { font-family: 'Titillium Web', sans-serif; font-size: 24px; letter-spacing: 2px; line-height: 1; color: var(--texto); }
@@ -63,39 +59,75 @@
     .vip-badge {
       display: none;
       margin-top: 8px;
-      padding: 4px 12px;
+      padding: 3px 10px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.5px;
-      background: linear-gradient(135deg, #C9A24B, #E0C476);
-      color: #1a1205;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      background: var(--card);
+      color: var(--oro);
+      border: 1px solid var(--oro);
     }
 
-    .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 80px; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 80px; }
 
-    .card {
+    /* Card única: blanco, borde, radio 8, sombra sutil, padding 20, separación 16 */
+    .card, .cliente-hero, .cliente-repuesto, .resumen-box, .instrucciones {
       background: var(--card); border: 1px solid var(--borde);
-      border-radius: 14px; padding: 20px; margin-bottom: 18px;
+      border-radius: var(--radio); padding: 20px; margin-bottom: 16px;
+      box-shadow: var(--sombra);
     }
+    .card.mt, .mt { margin-top: 16px; margin-bottom: 0; }
     .card-title {
       font-family: 'Titillium Web', sans-serif; font-size: 16px; letter-spacing: 1.5px;
-      color: var(--rojo); margin-bottom: 16px;
+      color: var(--marca); margin-bottom: 16px;
       display: flex; align-items: center; gap: 8px;
     }
     .card-title::before {
-      content: ''; width: 3px; height: 16px; background: var(--rojo);
+      content: ''; width: 3px; height: 16px; background: var(--marca);
       border-radius: 2px; display: inline-block;
     }
+    /* Etiqueta de sección: mayúsculas pequeñas mono, como el resto de labels */
+    .sec-label {
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .sec-label.ok { color: var(--ok); }
+    /* Tres niveles y no más: página var(--bg) → tarjeta var(--card) → caja interna var(--bg2) */
+    .caja {
+      background: var(--bg2); border: 1px solid var(--borde);
+      border-radius: var(--radio); padding: 14px;
+    }
+    .caja.lista { padding: 0 14px; }
+    /* Notas con barra izquierda de 3px: el color va en la barra, no en el fondo */
+    .nota { border-left: 3px solid var(--borde); padding: 4px 0 4px 14px; color: var(--texto); font-size: 14px; line-height: 1.6; }
+    .nota.alerta { border-left-color: var(--alerta); }
+    .nota.ok { border-left-color: var(--ok); }
+    .nota.marca { border-left-color: var(--marca); }
+    .barra-ok { border-left: 3px solid var(--ok); }
+    .barra-alerta { border-left: 3px solid var(--alerta); }
+    /* Tabla de resumen de montos: filas con línea, sin cajas de color */
+    .tabla-resumen { background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--radio); padding: 0 14px; margin-top: 12px; }
+    .tabla-resumen .fila {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--borde);
+    }
+    .tabla-resumen .fila:last-child { border-bottom: none; }
+    .tabla-resumen .fila .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; font-family: var(--mono); }
+    .tabla-resumen .fila .monto { font-family: 'Titillium Web', sans-serif; font-size: 22px; color: var(--texto); white-space: nowrap; text-align: right; }
+    .tabla-resumen .fila .monto.marca { color: var(--marca); }
+    .tabla-resumen .fila .monto.ok { color: var(--ok); }
+    .tabla-resumen .fila.total .monto { font-size: 26px; font-weight: 700; }
 
     .tag {
       font-size: 11px; font-weight: 700; padding: 3px 10px;
       border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
+      background: var(--card); border: 1px solid var(--borde);
     }
-    .tag-critico, .tag-crítico, .tag-cr\00EDtico { background: var(--crit-bg); color: var(--rojo); border: 1px solid var(--crit-border); }
-    .tag-recomendado { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
-    .tag-opcional { background: var(--ok-tag-bg); color: var(--success); border: 1px solid var(--ok-tag-border); }
+    .tag-critico, .tag-crítico, .tag-cr\00EDtico { color: var(--marca); border-color: var(--marca); }
+    .tag-recomendado { color: var(--oro); border-color: var(--oro); }
+    .tag-opcional { color: var(--ok); border-color: var(--ok); }
 
     .mf{display:inline-block;width:16px;height:11px;border-radius:1.5px;overflow:hidden;border:.5px solid rgba(0,0,0,.12);vertical-align:-1px;position:relative}
     .mf.us{background:repeating-linear-gradient(#b22234 0 1.57px,#fff 1.57px 3.14px)}
@@ -114,26 +146,23 @@
     .mf.cn{background:radial-gradient(circle 2.2px at 22% 36%, #FFDE00 97%, transparent 100%), #DE2910}
     .mf.cn::after{content:''}
 
-    .cliente-hero {
-      background: var(--card);
-      border: 1px solid var(--borde); border-radius: 14px;
-      padding: 24px; margin-bottom: 20px; text-align: center;
-    }
+    /* Heros de estado (aprobada / pedido realizado / en el taller / cierre): diseño
+       original de main — centrado, ícono grande arriba, h2 28px — con la paleta nueva.
+       ÚNICA EXCEPCIÓN a la regla "sin emojis en títulos": el ícono del hero
+       (✅ 🚚 📦 🔧) se conserva a propósito como señal visual del estado. */
+    .cliente-hero { padding: 24px; margin-bottom: 20px; text-align: center; }
+    .cliente-hero .hero-icono { font-size: 3rem; line-height: 1; margin-bottom: 12px; }
     .cliente-hero h2 { font-family: 'Titillium Web', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--texto); }
     .cliente-hero p { color: var(--muted); font-size: 14px; margin-top: 6px; }
-    .cliente-hero .taller-name { color: var(--rojo); font-weight: 700; }
+    .cliente-hero .taller-name { color: var(--marca); font-weight: 700; }
 
-    .instrucciones {
-      background: var(--card2); border: 1px solid var(--borde);
-      border-radius: 14px; padding: 20px; margin-bottom: 20px; font-size: 14px;
-    }
+    .instrucciones { font-size: 14px; }
+    /* Nota "no proforma": texto normal con barra izquierda de alerta, sin fondo */
+    .nota-proforma { background: var(--bg2); border: 1px solid var(--borde); border-left: 3px solid var(--alerta); border-radius: var(--radio); padding: 12px 14px; color: var(--texto); font-size: 13px; line-height: 1.55; margin-bottom: 16px; }
+    .nota-proforma b { color: var(--texto); font-weight: 700; }
 
-    .cliente-repuesto {
-      background: var(--card); border: 1px solid var(--borde);
-      border-radius: 14px; padding: 20px; margin-bottom: 16px;
-      transition: border-color 0.25s, background 0.25s;
-    }
-    .cliente-repuesto.tiene-seleccion { border-color: var(--success); background: color-mix(in srgb, var(--success) 7%, transparent); }
+    .cliente-repuesto { transition: border-color 0.2s; }
+    .cliente-repuesto.tiene-seleccion { border-color: var(--ok); }
     .cliente-repuesto-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
     .cliente-repuesto-nombre { font-weight: 700; font-size: 17px; }
     .cliente-repuesto-nota { font-size: 13px; color: var(--muted); margin-top: 5px; font-style: italic; }
@@ -141,65 +170,63 @@
     .opciones-cliente { display: flex; flex-direction: column; gap: 8px; }
     .opcion-cliente {
       display: flex; align-items: center; gap: 12px;
-      background: var(--card2); border: 1.5px solid var(--borde);
-      border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.2s;
+      background: var(--bg2); border: 1px solid var(--borde);
+      border-radius: var(--radio); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
     }
-    .opcion-cliente:hover { border-color: var(--borde-activo); }
-    .opcion-cliente.seleccionada { border-color: var(--success); background: color-mix(in srgb, var(--success) 7%, transparent); }
+    .opcion-cliente:hover { background: var(--bg3); border-color: var(--borde2); }
+    .opcion-cliente.seleccionada { background: var(--bg3); border-color: var(--borde2); box-shadow: inset 3px 0 0 var(--ok); }
     .radio-dot {
       width: 18px; height: 18px; border-radius: 50%;
-      border: 2px solid var(--borde-activo); flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+      border: 2px solid var(--muted); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
     }
-    .opcion-cliente.seleccionada .radio-dot { border-color: var(--success); background: var(--success); }
+    .opcion-cliente.seleccionada .radio-dot { border-color: var(--ok); background: var(--ok); }
     .radio-dot::after {
       content: ''; width: 7px; height: 7px; border-radius: 50%;
       background: var(--card); display: none;
     }
     .opcion-cliente.seleccionada .radio-dot::after { display: block; }
-    .opcion-cliente-info { flex: 1; }
+    .opcion-cliente-info { flex: 1; min-width: 0; }
     .opcion-cliente-titulo { font-weight: 600; font-size: 14px; }
     .opcion-cliente-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
     .opcion-cliente-precio {
       font-family: 'Titillium Web', sans-serif; font-size: 20px;
-      color: var(--success); letter-spacing: 0.5px; white-space: nowrap;
+      color: var(--ok); letter-spacing: 0.5px; white-space: nowrap; text-align: right;
     }
     .no-seleccionar {
       display: flex; align-items: center; gap: 12px;
-      background: transparent; border: 1.5px dashed var(--borde);
-      border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.2s; margin-top: 8px;
+      background: var(--bg2); border: 1px dashed var(--borde);
+      border-radius: var(--radio); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; margin-top: 8px;
     }
-    .no-seleccionar:hover { border-color: var(--borde-activo); }
-    .no-seleccionar.seleccionada { border-color: var(--muted); background: var(--card2); }
+    .no-seleccionar:hover { background: var(--bg3); border-color: var(--borde2); }
+    .no-seleccionar.seleccionada { background: var(--bg3); border-color: var(--borde2); box-shadow: inset 3px 0 0 var(--muted); }
     .no-seleccionar span { font-size: 13px; color: var(--muted); }
 
-    .resumen-box {
-      background: var(--card); border: 1px solid var(--borde);
-      border-radius: 14px; padding: 20px; margin-top: 20px;
-    }
-    .resumen-box h3 { font-family: 'Titillium Web', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--rojo); margin-bottom: 16px; }
+    .resumen-box { margin-top: 16px; margin-bottom: 0; }
+    .resumen-box h3 { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
     .resumen-item { padding: 12px 0; border-bottom: 1px solid var(--borde); }
     .resumen-item:last-of-type { border-bottom: none; }
+    .caja.lista > div:last-child, .caja.lista > .resumen-item:last-child { border-bottom: none; }
     .resumen-item-nombre { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
     .resumen-item-det { font-size: 14px; color: var(--muted); }
-    .resumen-item-precio { font-family: 'Titillium Web', sans-serif; font-size: 20px; color: var(--success); }
+    .resumen-item-precio { font-family: 'Titillium Web', sans-serif; font-size: 20px; color: var(--ok); white-space: nowrap; text-align: right; }
+    /* Total: fila de tabla con línea superior, sin caja de color */
     .resumen-total {
-      background: var(--card2); border: 1px solid var(--borde);
-      border-radius: 10px; padding: 14px; margin-top: 14px;
-      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--borde); padding: 14px 0 0; margin-top: 14px;
+      display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
     }
-    .resumen-total span { font-weight: 700; font-size: 15px; }
-    .resumen-total .monto-total { font-family: 'Titillium Web', sans-serif; font-size: 30px; color: var(--texto); }
+    .resumen-total span { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); }
+    .resumen-total .monto-total { font-family: 'Titillium Web', sans-serif; font-size: 30px; font-weight: 700; color: var(--texto); letter-spacing: 0; text-transform: none; text-align: right; }
 
     .btn {
       display: inline-flex; align-items: center; gap: 7px;
-      padding: 10px 18px; min-height: 44px; border: none; border-radius: 8px;
+      padding: 10px 18px; min-height: 44px; border: none; border-radius: var(--radio);
       font-family: 'Titillium Web', sans-serif; font-size: 14px; font-weight: 600;
       cursor: pointer; transition: all 0.15s; text-decoration: none; white-space: nowrap;
     }
     .btn:active { transform: scale(0.97); }
-    /* Confirmar selección: no abre WhatsApp — navy propio */
-    .btn-navy { background: var(--navy); color: #fff; }
+    /* Confirmar selección: no abre WhatsApp — botón oscuro propio */
+    .btn-navy { background: var(--texto); color: #fff; }
     .btn-navy:hover { filter: brightness(1.3); }
     .btn-navy:disabled { background: var(--muted); color: var(--card); filter: none; cursor: not-allowed; }
 
@@ -207,12 +234,13 @@
 
     #snackbar {
       position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-      padding: 13px 22px; border-radius: 10px; font-size: 14px; font-weight: 600;
+      padding: 13px 22px; border-radius: var(--radio); font-size: 14px; font-weight: 600;
       z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,.18);
     }
     #snackbar.show { opacity: 1; }
-    #snackbar.ok { background: var(--success); color: var(--card); }
-    #snackbar.err { background: var(--rojo); color: var(--card); }
+    #snackbar.ok { background: var(--ok); color: var(--card); }
+    #snackbar.err { background: var(--marca); color: var(--card); }
 
     .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
     .empty .icon { font-size: 48px; margin-bottom: 12px; }
@@ -222,10 +250,10 @@
       .resumen-total { flex-direction: column; gap: 6px; text-align: center; }
     }
     /* Seguimiento (en camino / en taller): badge del hero y fila de tiempos que aplica */
-    .badge-estado { display:inline-block; margin-top:12px; padding:5px 12px; border-radius:999px; font-family:'Titillium Web',sans-serif; font-size:12px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--navy); background:var(--card2); border:1px solid var(--borde); }
-    .fila-tiempo { padding:6px 8px; border-radius:8px; border:1px solid transparent; }
-    .fila-tiempo.aplica { border-color:var(--success); background:color-mix(in srgb, var(--success) 8%, transparent); }
-    .fila-tiempo-tag { font-size:10px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:0.6px; margin-left:6px; }
+    .badge-estado { display:inline-block; margin-top:12px; padding:5px 12px; border-radius:999px; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--texto); background:var(--card); border:1px solid var(--borde); }
+    .fila-tiempo { padding:6px 10px; border-radius:var(--radio); border:1px solid transparent; }
+    .fila-tiempo.aplica { background:var(--card); border-color:var(--borde); box-shadow: inset 3px 0 0 var(--ok); }
+    .fila-tiempo-tag { font-size:10px; font-weight:700; color:var(--ok); text-transform:uppercase; letter-spacing:0.6px; margin-left:6px; }
     @media (max-width: 600px) {
       .pago-grid-2col { grid-template-columns: 1fr !important; }
     }
@@ -233,11 +261,11 @@
       .header { padding: 12px 16px; gap: 10px; }
     }
     /* Toggle de idioma (ES · EN) y leyenda de traducción — mono chico, discreto */
-    .lang-toggle { margin-left:auto; align-self:flex-start; display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono','SFMono-Regular',Menlo,Consolas,monospace; font-size:11px; letter-spacing:1px; color:var(--muted); }
-    .lang-toggle button { background:none; border:none; padding:4px 2px; color:inherit; font:inherit; cursor:pointer; opacity:0.7; }
-    .lang-toggle button.on { color:var(--texto); font-weight:700; opacity:1; text-decoration:underline; text-underline-offset:3px; }
+    .lang-toggle { margin-left:auto; align-self:flex-start; display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; letter-spacing:1px; color:var(--muted); }
+    .lang-toggle button { background:none; border:none; padding:4px 2px; color:var(--muted); font:inherit; cursor:pointer; opacity:0.8; }
+    .lang-toggle button.on { color:var(--muted); font-weight:700; opacity:1; text-decoration:underline; text-underline-offset:3px; }
     .trad-leyenda { text-align:center; font-size:11.5px; color:var(--muted); margin-top:18px; }
-    .trad-leyenda button { background:none; border:none; padding:0; color:var(--navy); font:inherit; text-decoration:underline; cursor:pointer; }
+    .trad-leyenda button { background:none; border:none; padding:0; color:var(--texto); font:inherit; text-decoration:underline; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -290,14 +318,14 @@ const I18N = {
     'cargando': 'Cargando tu cotización...',
     'si': 'Sí',
     'no': 'No',
-    'garantia_prefijo': '🛡️ Garantía: ',
+    'garantia_prefijo': 'Garantía: ',
     // errores / estados de guardado
     'error.reenviar': 'Pedile a tu taller que te reenvíe el link.',
     'error.link': 'Link inválido o expirado.',
     'error.no_encontrada': 'Cotización no encontrada.',
     'error.cargar': 'No se pudo cargar la cotización. Intentá de nuevo.',
-    'error.guardar': '⚠️ Error al guardar: {msg}',
-    'guardando': '⏳ Guardando tu selección...',
+    'error.guardar': 'Error al guardar: {msg}',
+    'guardando': 'Guardando tu selección...',
     'alert.ya_aprobada': 'Esta cotización ya fue aprobada. Recargá la página para ver el estado actualizado.',
     'alert.cambio': 'La cotización cambió desde que la abriste (el taller actualizó repuestos o precios). Se va a recargar para que la revisés de nuevo.',
     // lote 1: un texto por código de error del RPC cotizacion_publica_aprobar
@@ -319,7 +347,7 @@ const I18N = {
     'estado.reconstruido': 'Reconstruido',
     // vista aprobada (A1/A2/A3)
     'ap.resumen_pedido': 'Resumen de tu pedido',
-    'ap.con_instalacion': '🔧 Con instalación en el taller',
+    'ap.con_instalacion': 'Con instalación en el taller',
     'ap.solo_repuestos': 'Solo repuestos',
     'ap.enviar_comprobante': 'Enviar comprobante de pago',
     'ap.hero_aprobada': '¡Cotización aprobada!',
@@ -335,16 +363,16 @@ const I18N = {
     'ap.falta_adelanto': 'Falta del adelanto',
     'ap.adelanto_cubierto': '✓ Adelanto cubierto',
     'ap.taller_procedera': 'El taller procederá con el pedido.',
-    'ap.ya_abonaste_linea': 'Ya abonaste: <strong style="color:var(--success);">{monto}</strong>',
+    'ap.ya_abonaste_linea': 'Ya abonaste: <strong style="color:var(--ok);">{monto}</strong>',
     // seguimiento (C en camino / D en taller)
     'seg.badge_dias': ({ dias }) => dias === 0 ? 'Pedido recién realizado' : `${dias} día${dias === 1 ? ' hábil' : 's hábiles'} en camino`,
     'seg.hero_pedido': '¡Tu pedido ya fue realizado!',
     'seg.pedido_el': 'Pedido realizado el {fecha}',
-    'seg.aviso_llegada': '🔔 Te avisaremos cuando lleguen al taller.',
+    'seg.aviso_llegada': 'Te avisaremos cuando lleguen al taller.',
     'seg.hero_en_taller': 'Estamos trabajando en tu vehículo',
     'seg.hero_listo': '¡Tus repuestos ya están en el taller!',
     'seg.llegaron_el': 'Llegaron el {fecha}',
-    'seg.tu_cita': '📅 Tu cita',
+    'seg.tu_cita': 'Tu cita',
     'seg.te_esperamos': 'Te esperamos en el taller.',
     'seg.retiro_titulo': 'Podés pasar a retirarlos',
     'seg.instal_titulo': 'Coordinemos la instalación',
@@ -368,7 +396,7 @@ const I18N = {
     'cierre.btn_garantia': '🛡️ Reclamar garantía por WhatsApp',
     'cierre.review_titulo': '¿Cómo te fue?',
     'cierre.review_texto': 'Tu opinión nos ayuda a seguir mejorando.',
-    'cierre.btn_review': '⭐ Dejanos tu reseña en Google',
+    'cierre.btn_review': 'Dejanos tu reseña en Google',
     // contacto (pie de las vistas post-aprobación)
     'contacto.modificar': 'Si necesitás modificar tu selección, contactanos. El taller puede reabrir tu cotización para que la apruebes nuevamente.',
     'contacto.dudas': '¿Tenés dudas sobre tu pedido? Escribinos y con gusto te ayudamos.',
@@ -410,22 +438,22 @@ const I18N = {
     'cuentas.numero': 'N° cuenta:',
     // tiempos de entrega
     'tiempos.tu_pedido': 'tu pedido',
-    'tiempos.titulo': '⏱️ Tiempos estimados de entrega',
+    'tiempos.titulo': 'Tiempos estimados de entrega',
     'tiempos.usa': '<strong>Estados Unidos</strong> — 7 a 15 días hábiles',
     'tiempos.europa': '<strong>Europa</strong> — 10 a 20 días hábiles',
     'tiempos.china': '<strong>China</strong> — 15 a 20 días hábiles',
-    'tiempos.pie': '📦 Los pedidos se realizan los fines de semana.<br>\n      ⚠️ El costo de los repuestos no incluye IVA.',
+    'tiempos.pie': 'Los pedidos se realizan los fines de semana.<br>\n      El costo de los repuestos no incluye IVA.',
     // selección (vista A antes de aprobar)
-    'venc.titulo': '⏳ Cotización vencida',
+    'venc.titulo': 'Cotización vencida',
     'venc.texto': 'Esta cotización venció. Los precios pueden haber cambiado. Escribinos para pedir una cotización actualizada.',
     'sel.folio_label': 'Cotización',
-    'sel.fecha_linea': 'Cotización del <b style="color:var(--dim);font-weight:700;">{fecha}</b> · válida por <b style="color:var(--dim);font-weight:700;">30 días</b>',
-    'sel.no_proforma': '<b style="color:var(--warn);font-weight:700;">Esta cotización aún no es una proforma oficial.</b> Elegí los repuestos que querés aprobar y te enviamos la proforma final con el detalle.',
+    'sel.fecha_linea': 'Cotización del <b style="color:var(--texto);font-weight:700;">{fecha}</b> · válida por <b style="color:var(--texto);font-weight:700;">30 días</b>',
+    'sel.no_proforma': '<b>Esta cotización aún no es una proforma oficial.</b> Elegí los repuestos que querés aprobar y te enviamos la proforma final con el detalle.',
     'sel.imagenes': 'Imágenes',
-    'sel.instrucciones': '👇 <strong>Seleccioná qué repuestos querés aprobar</strong> y cuál opción preferís para cada uno.\n      Cuando termines, tocá <strong>"Confirmar selección"</strong>.',
+    'sel.instrucciones': '<strong>Seleccioná qué repuestos querés aprobar</strong> y cuál opción preferís para cada uno.\n      Cuando termines, tocá <strong>"Confirmar selección"</strong>.',
     'sel.no_deseo': 'No deseo este repuesto por ahora',
-    'sel.tu_seleccion': '✅ Tu selección',
-    'sel.cuanto_abonar': '💳 ¿Cuánto deseás abonar?',
+    'sel.tu_seleccion': 'Tu selección',
+    'sel.cuanto_abonar': '¿Cuánto deseás abonar?',
     'sel.adelanto_min': 'Adelanto mínimo (50%)',
     'sel.pago_total': 'Pago total',
     'sel.otro_monto': 'Otro monto',
@@ -464,13 +492,13 @@ const I18N = {
     'cargando': 'Loading your quote...',
     'si': 'Yes',
     'no': 'No',
-    'garantia_prefijo': '🛡️ Warranty: ',
+    'garantia_prefijo': 'Warranty: ',
     'error.reenviar': 'Ask your workshop to resend the link.',
     'error.link': 'Invalid or expired link.',
     'error.no_encontrada': 'Quote not found.',
     'error.cargar': 'We couldn\'t load your quote. Please try again.',
-    'error.guardar': '⚠️ Error saving: {msg}',
-    'guardando': '⏳ Saving your selection...',
+    'error.guardar': 'Error saving: {msg}',
+    'guardando': 'Saving your selection...',
     'alert.ya_aprobada': 'This quote has already been approved. Reload the page to see the updated status.',
     'alert.cambio': 'The quote changed since you opened it (the shop updated parts or prices). The page will reload so you can review it again.',
     'err.no_encontrada': 'This quote is no longer available for approval. Message us if you think this is a mistake.',
@@ -489,7 +517,7 @@ const I18N = {
     'estado.usado': 'Used',
     'estado.reconstruido': 'Remanufactured',
     'ap.resumen_pedido': 'Your order summary',
-    'ap.con_instalacion': '🔧 With installation at the workshop',
+    'ap.con_instalacion': 'With installation at the workshop',
     'ap.solo_repuestos': 'Parts only',
     'ap.enviar_comprobante': 'Send payment receipt',
     'ap.hero_aprobada': 'Quote approved!',
@@ -505,15 +533,15 @@ const I18N = {
     'ap.falta_adelanto': 'Deposit remaining',
     'ap.adelanto_cubierto': '✓ Deposit covered',
     'ap.taller_procedera': 'The workshop will proceed with the order.',
-    'ap.ya_abonaste_linea': 'Already paid: <strong style="color:var(--success);">{monto}</strong>',
+    'ap.ya_abonaste_linea': 'Already paid: <strong style="color:var(--ok);">{monto}</strong>',
     'seg.badge_dias': ({ dias }) => dias === 0 ? 'Order just placed' : `${dias} business day${dias === 1 ? '' : 's'} in transit`,
     'seg.hero_pedido': 'Your order has been placed!',
     'seg.pedido_el': 'Order placed on {fecha}',
-    'seg.aviso_llegada': '🔔 We will let you know when they arrive at the workshop.',
+    'seg.aviso_llegada': 'We will let you know when they arrive at the workshop.',
     'seg.hero_en_taller': 'We are working on your vehicle',
     'seg.hero_listo': 'Your parts are at the workshop!',
     'seg.llegaron_el': 'Arrived on {fecha}',
-    'seg.tu_cita': '📅 Your appointment',
+    'seg.tu_cita': 'Your appointment',
     'seg.te_esperamos': 'We look forward to seeing you at the workshop.',
     'seg.retiro_titulo': 'Ready for pickup',
     'seg.instal_titulo': 'Let\'s schedule the installation',
@@ -536,7 +564,7 @@ const I18N = {
     'cierre.btn_garantia': '🛡️ Warranty claim on WhatsApp',
     'cierre.review_titulo': 'How did we do?',
     'cierre.review_texto': 'Your feedback helps us keep improving.',
-    'cierre.btn_review': '⭐ Leave us a Google review',
+    'cierre.btn_review': 'Leave us a Google review',
     'contacto.modificar': 'If you need to change your selection, contact us. The workshop can reopen your quote so you can approve it again.',
     'contacto.dudas': 'Questions about your order? Message us and we will be glad to help.',
     'contacto.btn_modificar': '📞 I need to change my selection',
@@ -574,21 +602,21 @@ const I18N = {
     'cuentas.titular': 'Account holder:',
     'cuentas.numero': 'Account no.:',
     'tiempos.tu_pedido': 'your order',
-    'tiempos.titulo': '⏱️ Estimated delivery times',
+    'tiempos.titulo': 'Estimated delivery times',
     'tiempos.usa': '<strong>United States</strong> — 7 to 15 business days',
     'tiempos.europa': '<strong>Europe</strong> — 10 to 20 business days',
     'tiempos.china': '<strong>China</strong> — 15 to 20 business days',
-    'tiempos.pie': '📦 Orders are placed on weekends.<br>\n      ⚠️ Parts prices do not include VAT.',
-    'venc.titulo': '⏳ Quote expired',
+    'tiempos.pie': 'Orders are placed on weekends.<br>\n      Parts prices do not include VAT.',
+    'venc.titulo': 'Quote expired',
     'venc.texto': 'This quote has expired. Prices may have changed. Message us to request an updated quote.',
     'sel.folio_label': 'Quote',
-    'sel.fecha_linea': 'Quote dated <b style="color:var(--dim);font-weight:700;">{fecha}</b> · valid for <b style="color:var(--dim);font-weight:700;">30 days</b>',
-    'sel.no_proforma': '<b style="color:var(--warn);font-weight:700;">This quote is not an official pro forma invoice yet.</b> Choose the parts you want to approve and we will send you the final pro forma with the details.',
+    'sel.fecha_linea': 'Quote dated <b style="color:var(--texto);font-weight:700;">{fecha}</b> · valid for <b style="color:var(--texto);font-weight:700;">30 days</b>',
+    'sel.no_proforma': '<b>This quote is not an official pro forma invoice yet.</b> Choose the parts you want to approve and we will send you the final pro forma with the details.',
     'sel.imagenes': 'Images',
-    'sel.instrucciones': '👇 <strong>Select which parts you want to approve</strong> and which option you prefer for each one.\n      When you are done, tap <strong>"Confirm selection"</strong>.',
+    'sel.instrucciones': '<strong>Select which parts you want to approve</strong> and which option you prefer for each one.\n      When you are done, tap <strong>"Confirm selection"</strong>.',
     'sel.no_deseo': 'I don\'t want this part for now',
-    'sel.tu_seleccion': '✅ Your selection',
-    'sel.cuanto_abonar': '💳 How much would you like to pay now?',
+    'sel.tu_seleccion': 'Your selection',
+    'sel.cuanto_abonar': 'How much would you like to pay now?',
     'sel.adelanto_min': 'Minimum deposit (50%)',
     'sel.pago_total': 'Full payment',
     'sel.otro_monto': 'Other amount',
@@ -791,7 +819,7 @@ function copiarTexto(txt, btn) {
   if (btn) {
     const orig = btn.textContent;
     btn.textContent = '✅';
-    btn.style.color = 'var(--success)';
+    btn.style.color = 'var(--ok)';
     setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
   }
 }
@@ -992,9 +1020,9 @@ function mostrarYaAprobado(row) {
     .map(l => ({ rep: l, op: l.opcion }));
 
   const seleccionHTML = pendienteAdelanto && aprobadosSel.length > 0 ? `
-    <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-      <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">${t('ap.resumen_pedido')}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
+    <div class="card mt">
+      <div class="sec-label">${t('ap.resumen_pedido')}</div>
+      <div class="caja lista" style="display:flex;flex-direction:column;gap:8px;padding-top:8px;">
         ${aprobadosSel.map(({ rep, op }) => `
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
             <div style="color:var(--texto);">
@@ -1013,7 +1041,7 @@ function mostrarYaAprobado(row) {
   const btnComprobanteHTML = `
     <div style="text-align:center;margin-top:16px;">
       <a href="#" id="btnComprobante"
-         style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+         style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">
         <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
         ${t('ap.enviar_comprobante')}
       </a>
@@ -1022,16 +1050,16 @@ function mostrarYaAprobado(row) {
   // Hero por defecto (aprobado / rama B); las ramas en_camino y listo ponen el suyo.
   let heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
-      <div style="font-size:3rem;margin-bottom:12px;">✅</div>
+      <div class="hero-icono">✅</div>
       <h2>${t('ap.hero_aprobada')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fecha ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('ap.aprobada_el', { fecha: esc(fecha) })}</p>` : ''}
     </div>`;
   // Resumen de lo aprobado, reutilizable por las ramas de seguimiento.
   const resumenPedidoHTML = aprobadosSel.length > 0 ? `
-    <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-      <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">${t('ap.resumen_pedido')}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
+    <div class="card mt">
+      <div class="sec-label">${t('ap.resumen_pedido')}</div>
+      <div class="caja lista" style="display:flex;flex-direction:column;gap:8px;padding-top:8px;">
         ${aprobadosSel.map(({ rep, op }) => `
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
             <div style="color:var(--texto);">
@@ -1046,8 +1074,8 @@ function mostrarYaAprobado(row) {
     </div>` : '';
   // Bloque "ya abonaste" + saldo (rama B y ramas de seguimiento)
   const abonoHTML = (notaSaldo = '') => adelantoPagado > 0 ? `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div class="card mt">
+        <div class="tabla-resumen">
           ${cajaVerde(t('ap.ya_abonaste'), adelantoPagado)}
         </div>
         ${lineaSaldo}
@@ -1056,22 +1084,12 @@ function mostrarYaAprobado(row) {
   // Orígenes de las opciones aprobadas (para resaltar la fila de tiempos que aplica)
   const origenesAprobados = [...new Set(aprobadosSel.map(({ op }) => origenKey(op?.origen)))];
 
-  // Cajas de monto reutilizables (mismo look que cb32bec: flex 1, min-width 130).
-  const cajaNeutra = (titulo, monto) => `
-          <div style="flex:1;min-width:130px;background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">${titulo}</div>
-            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--texto);">${fCRC(monto)}</div>
-          </div>`;
-  const cajaRoja = (titulo, monto) => `
-          <div style="flex:1;min-width:130px;background:rgba(200,40,40,0.08);border:1px solid var(--rojo);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:11px;color:var(--rojo);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">${titulo}</div>
-            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--rojo);font-weight:700;">${fCRC(monto)}</div>
-          </div>`;
-  const cajaVerde = (titulo, monto) => `
-          <div style="flex:1;min-width:130px;background:color-mix(in srgb, var(--success) 8%, transparent);border:1px solid var(--success);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">${titulo}</div>
-            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--success);font-weight:700;">${fCRC(monto)}</div>
-          </div>`;
+  // Filas de la tabla de resumen (sin cajas de color: el color va solo en el monto).
+  const fila = (titulo, monto, tono = '') => `
+          <div class="fila"><span class="lbl">${titulo}</span><span class="monto ${tono}">${fCRC(monto)}</span></div>`;
+  const cajaNeutra = (titulo, monto) => fila(titulo, monto);
+  const cajaRoja   = (titulo, monto) => fila(titulo, monto, 'marca');
+  const cajaVerde  = (titulo, monto) => fila(titulo, monto, 'ok');
   // Informativa, NO alarmante: el saldo se paga contra entrega, no ahora.
   const lineaSaldo = saldoTotal > 0 ? `
         <div style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:14px;line-height:1.5;">
@@ -1082,11 +1100,11 @@ function mostrarYaAprobado(row) {
   if (pendienteAdelanto && adelantoPagado === 0) {
     // A1 — sin adelanto: comportamiento original (cb32bec).
     const resumenHTML = total > 0 ? `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
+      <div class="card mt">
         <div style="text-align:center;color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px;">
           ${esVip ? t('ap.a1_intro_vip') : t('ap.a1_intro')}
         </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="tabla-resumen">
           ${cajaNeutra(t('ap.total_aprobado'), total)}
           ${esVip ? '' : cajaRoja(t('ap.adelanto_requerido'), adelantoReq)}
         </div>
@@ -1099,11 +1117,11 @@ function mostrarYaAprobado(row) {
   } else if (pendienteAdelanto && faltaAdelanto > 0) {
     // A2 — adelanto parcial: mostrar lo abonado, lo que falta, y las cuentas.
     cuerpoHTML = `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
+      <div class="card mt">
         <div style="text-align:center;color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px;">
           ${t('ap.a2_intro')}
         </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="tabla-resumen">
           ${cajaVerde(t('ap.ya_abonaste'), adelantoPagado)}
           ${cajaRoja(t('ap.falta_adelanto'), faltaAdelanto)}
         </div>
@@ -1113,9 +1131,9 @@ function mostrarYaAprobado(row) {
   } else if (pendienteAdelanto) {
     // A3 — adelanto cubierto o superado: sin cuentas, confirmación tranquilizadora.
     cuerpoHTML = seleccionHTML + `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-        <div style="background:color-mix(in srgb, var(--success) 10%, transparent);border:1px solid var(--success);border-radius:12px;padding:18px;text-align:center;">
-          <div style="font-size:16px;font-weight:700;color:var(--success);">${t('ap.adelanto_cubierto')}</div>
+      <div class="card mt">
+        <div class="nota ok" style="text-align:left;">
+          <div style="font-size:16px;font-weight:700;color:var(--ok);">${t('ap.adelanto_cubierto')}</div>
           <div style="font-size:13px;color:var(--texto);margin-top:6px;line-height:1.5;">${t('ap.taller_procedera')}</div>
         </div>
         <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:12px;">
@@ -1130,7 +1148,7 @@ function mostrarYaAprobado(row) {
     const fPedido = fechaCR(row.estado_changed_at);
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
-      <div style="font-size:3rem;margin-bottom:12px;">🚚</div>
+      <div class="hero-icono">🚚</div>
       <h2>${t('seg.hero_pedido')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fPedido ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('seg.pedido_el', { fecha: esc(fPedido) })}</p>` : ''}
@@ -1147,7 +1165,7 @@ function mostrarYaAprobado(row) {
     const fLlegada = estado === 'listo' ? fechaCR(row.estado_changed_at) : '';
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
-      <div style="font-size:3rem;margin-bottom:12px;">${enTaller ? '🔧' : '📦'}</div>
+      <div class="hero-icono">${enTaller ? '🔧' : '📦'}</div>
       <h2>${enTaller ? t('seg.hero_en_taller') : t('seg.hero_listo')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fLlegada ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('seg.llegaron_el', { fecha: esc(fLlegada) })}</p>` : ''}
@@ -1159,18 +1177,18 @@ function mostrarYaAprobado(row) {
     } else if (row.fecha_agendado) {
       // fecha_agendado es DATE (sin hora): solo fecha civil CR.
       citaHTML = `
-      <div style="background:var(--card);border:1px solid var(--success);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
-        <div style="font-size:11px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">${t('seg.tu_cita')}</div>
+      <div class="card mt barra-ok" style="text-align:center;">
+        <div class="sec-label ok">${t('seg.tu_cita')}</div>
         <div style="font-family:'Titillium Web',sans-serif;font-size:20px;color:var(--texto);text-transform:capitalize;">${esc(fechaCR(row.fecha_agendado, { weekday: 'long' }))}</div>
         <div style="font-size:13px;color:var(--muted);margin-top:8px;">${t('seg.te_esperamos')}</div>
       </div>`;
     } else {
       citaHTML = `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
-        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">${retiro ? t('seg.retiro_titulo') : t('seg.instal_titulo')}</div>
+      <div class="card mt" style="text-align:center;">
+        <div class="sec-label">${retiro ? t('seg.retiro_titulo') : t('seg.instal_titulo')}</div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">${retiro ? t('seg.retiro_texto') : t('seg.instal_texto')}</div>
         <a href="#" id="btnAgendar"
-           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">
           ${retiro ? t('seg.btn_retiro') : t('seg.btn_agendar')}
         </a>
       </div>`;
@@ -1184,7 +1202,7 @@ function mostrarYaAprobado(row) {
     const fCierre = fechaCR(row.estado_changed_at);
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
-      <div style="font-size:3rem;margin-bottom:12px;">✅</div>
+      <div class="hero-icono">✅</div>
       <h2>${t('cierre.hero')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       <p style="color:var(--texto);font-size:14px;margin-top:8px;">${t('cierre.gracias')}</p>
@@ -1195,15 +1213,15 @@ function mostrarYaAprobado(row) {
     } else {
       // Resumen con garantía por repuesto (solo si la opción aprobada la trae)
       const resumenCierreHTML = aprobadosSel.length > 0 ? `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:12px;">${t('ap.resumen_pedido')}</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card mt">
+        <div class="sec-label">${t('ap.resumen_pedido')}</div>
+        <div class="caja lista" style="display:flex;flex-direction:column;gap:8px;padding-top:8px;">
           ${aprobadosSel.map(({ rep, op }) => `
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
               <div style="color:var(--texto);">
                 ${esc(tx(rep.nombre || ''))}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
                 ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([tx(op.calidad), op.marca].filter(Boolean).join(' · '))}</div>` : ''}
-                ${op && String(op.garantia || '').trim() ? `<div style="color:var(--success);font-size:12px;margin-top:2px;">${t('garantia_prefijo')}${esc(tx(op.garantia))}</div>` : ''}
+                ${op && String(op.garantia || '').trim() ? `<div style="color:var(--ok);font-size:12px;margin-top:2px;">${t('garantia_prefijo')}${esc(tx(op.garantia))}</div>` : ''}
               </div>
               ${op && op.precio != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precio)}</div>` : ''}
             </div>`).join('')}
@@ -1217,32 +1235,29 @@ function mostrarYaAprobado(row) {
       if (estado === 'cobrado' && row.total != null) {
         const tot = Number(row.total) || 0;
         pagoHTML = `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">${t('cierre.resumen_pago')}</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div class="card mt">
+        <div class="sec-label">${t('cierre.resumen_pago')}</div>
+        <div class="tabla-resumen">
           ${cajaNeutra(t('cierre.total'), tot)}
-          <div style="flex:1;min-width:130px;background:color-mix(in srgb, var(--success) 8%, transparent);border:1px solid var(--success);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:700;">${t('cierre.estado')}</div>
-            <div style="font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--success);font-weight:700;">${t('cierre.pagado')}</div>
-          </div>
+          <div class="fila"><span class="lbl">${t('cierre.estado')}</span><span class="monto ok">${t('cierre.pagado')}</span></div>
         </div>
       </div>`;
       }
       const garantiaHTML = `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
-        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">${t('cierre.garantia_titulo')}</div>
+      <div class="card mt" style="text-align:center;">
+        <div class="sec-label">${t('cierre.garantia_titulo')}</div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">${t('cierre.garantia_texto')}</div>
         <a href="#" id="btnGarantia"
-           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">
           ${t('cierre.btn_garantia')}
         </a>
       </div>`;
       const reviewHTML = GOOGLE_REVIEW_URL ? `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
-        <div style="font-family:'Titillium Web',sans-serif;font-size:15px;letter-spacing:1.2px;color:var(--navy);margin-bottom:8px;">${t('cierre.review_titulo')}</div>
+      <div class="card mt" style="text-align:center;">
+        <div class="sec-label">${t('cierre.review_titulo')}</div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">${t('cierre.review_texto')}</div>
         <a href="${esc(GOOGLE_REVIEW_URL)}" target="_blank" rel="noopener"
-           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--navy);color:var(--card);border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+           style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--texto);color:var(--card);border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">
           ${t('cierre.btn_review')}
         </a>
       </div>` : '';
@@ -1252,14 +1267,14 @@ function mostrarYaAprobado(row) {
   }
 
   const contactoHTML = `
-    <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;text-align:center;">
+    <div class="card mt" style="text-align:center;">
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
         ${pendienteAdelanto
           ? t('contacto.modificar')
           : t('contacto.dudas')}
       </div>
       <a href="#" id="btnContactarTaller"
-         style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--navy);color:var(--card);border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">
+         style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--texto);color:var(--card);border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
         ${pendienteAdelanto ? t('contacto.btn_modificar') : t('contacto.btn_consultar')}
       </a>
     </div>`;
@@ -1363,8 +1378,8 @@ function cuentasBancariasHTML(cp) {
     ? `${t('cuentas.intro1')}<br>${t('cuentas.intro2')}`
     : esc(cp.intro);
   const cuentaHTML = c => `
-      <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">${c.moneda === 'USD' ? '💵' : '🏦'} ${t('cuentas.cuenta', { banco: esc(c.banco || ''), moneda: c.moneda === 'USD' ? t('cuentas.dolares') : t('cuentas.colones') })}</div>
+      <div class="caja">
+        <div class="sec-label">${c.moneda === 'USD' ? '💵' : '🏦'} ${t('cuentas.cuenta', { banco: esc(c.banco || ''), moneda: c.moneda === 'USD' ? t('cuentas.dolares') : t('cuentas.colones') })}</div>
         <div style="font-size:13px;line-height:2;color:var(--texto);">
           ${c.titular ? `<div><span style="color:var(--muted);">${t('cuentas.titular')}</span> ${esc(c.titular)}</div>` : ''}
           ${c.numero ? `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -1378,24 +1393,22 @@ function cuentasBancariasHTML(cp) {
         </div>
       </div>`;
   const sinpe = cp.sinpe && cp.sinpe.numero ? `
-    <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px;">
+    <div class="caja" style="display:flex;align-items:center;gap:14px;">
       <div style="font-size:28px;">📱</div>
       <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;">${t('cuentas.sinpe')}</div>
+        <div class="sec-label">${t('cuentas.sinpe')}</div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-family:'Titillium Web',sans-serif;font-size:26px;letter-spacing:2px;color:var(--navy);">${esc(cp.sinpe.numero)}</div>
+          <div style="font-family:'Titillium Web',sans-serif;font-size:26px;letter-spacing:2px;color:var(--marca);">${esc(cp.sinpe.numero)}</div>
           ${btnCopiar(String(cp.sinpe.numero).replace(/\D/g, ''))}
         </div>
         ${cp.sinpe.titular ? `<div style="font-size:12px;color:var(--muted);">${esc(cp.sinpe.titular)}</div>` : ''}
       </div>
     </div>` : '';
   return `
-  <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:20px;">
-    <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-      <span style="display:inline-block;width:3px;height:16px;background:var(--rojo);border-radius:2px;"></span>
-      ${t('cuentas.titulo')}
+  <div class="card mt">
+    <div class="sec-label">${t('cuentas.titulo')}
     </div>
-    <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;">
+    <div class="caja" style="margin-bottom:16px;font-size:14px;line-height:1.6;">
       ${intro}
     </div>
     ${cuentas.length > 0 ? `<div class="pago-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">${cuentas.map(cuentaHTML).join('')}</div>` : ''}
@@ -1419,9 +1432,9 @@ function tiemposEntregaHTML(origenes = null, pie = null) {
       </div>`;
   };
   return `
-  <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:20px;">
-    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">${t('tiempos.titulo')}</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
+  <div class="card mt">
+    <div class="sec-label">${t('tiempos.titulo')}</div>
+    <div class="caja" style="display:flex;flex-direction:column;gap:8px;">
       ${fila('usa', 'us', t('tiempos.usa'))}
       ${fila('europa', 'eu', t('tiempos.europa'))}
       ${fila('china', 'cn', t('tiempos.china'))}
@@ -1439,8 +1452,8 @@ function iniciar(payload) {
     && (new Date(cliente.fechaCotizacion).getTime() + 30*24*60*60*1000) < Date.now()
     && cliente.estado === 'cotizado';
   const bannerVencida = `
-    <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:14px;padding:20px;margin-bottom:20px;">
-      <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1px;color:var(--warn);font-weight:700;text-transform:uppercase;margin-bottom:8px;">${t('venc.titulo')}</div>
+    <div class="card barra-alerta">
+      <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1px;color:var(--alerta);font-weight:700;text-transform:uppercase;margin-bottom:8px;">${t('venc.titulo')}</div>
       <div style="font-size:14px;color:var(--texto);line-height:1.55;">${t('venc.texto')}</div>
     </div>`;
   const sel = new Array(reps.length).fill(null);
@@ -1484,33 +1497,31 @@ function iniciar(payload) {
     if (_headerSub && cliente.nombre) _headerSub.textContent = t('header.sub_para', { nombre: cliente.nombre });
     document.title = (folio ? folio + ' · ' : '') + (cliente.nombre || t('doc.title_fallback')) + ' – Taller Ramos y Ramos';
     const folioBlock = folio
-      ? `<div style="text-align:right;flex-shrink:0;"><div style="font-family:'Titillium Web',sans-serif;font-size:7.5px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:600;">${t('sel.folio_label')}</div><div style="font-family:'Titillium Web',sans-serif;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:0.5px;">${esc(folio)}</div></div>`
+      ? `<div style="text-align:right;flex-shrink:0;"><div style="font-family:'Titillium Web',sans-serif;font-size:7.5px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:600;">${t('sel.folio_label')}</div><div style="font-family:'Titillium Web',sans-serif;font-size:13px;font-weight:700;color:var(--texto);letter-spacing:0.5px;">${esc(folio)}</div></div>`
       : '';
     const vehBlock = tieneVeh
-      ? `<div style="font-family:'Cormorant',serif;font-size:22px;font-weight:600;color:var(--dim);${folio ? 'margin-top:8px;' : ''}line-height:1.15;">Mercedes-Benz</div>
+      ? `<div style="font-family:'Cormorant',serif;font-size:22px;font-weight:600;color:var(--texto);${folio ? 'margin-top:8px;' : ''}line-height:1.15;">Mercedes-Benz</div>
       ${modeloLinea ? `<div style="font-family:'Cormorant',serif;font-size:30px;font-weight:500;color:var(--texto);line-height:1.15;">${esc(modeloLinea)}</div>` : ''}
       <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:12px;margin-top:16px;flex-wrap:wrap;">${placaHTML(cliente.patente)}</div>
-      ${cliente.vin ? `<div style="margin-top:14px;font-family:'Titillium Web',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);">VIN · <span style="color:var(--dim);font-weight:600;letter-spacing:0.5px;">${esc(cliente.vin)}</span></div>` : ''}
-      ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--success);flex-shrink:0;"></span><span>${t('sel.fecha_linea', { fecha: esc(fechaCot) })}</span></div>` : ''}`
+      ${cliente.vin ? `<div style="margin-top:14px;font-family:'Titillium Web',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);">VIN · <span style="color:var(--texto);font-weight:600;letter-spacing:0.5px;">${esc(cliente.vin)}</span></div>` : ''}
+      ${fechaCot ? `<div style="display:flex;align-items:center;gap:7px;margin-top:18px;font-family:'Titillium Web',sans-serif;font-size:10.5px;color:var(--muted);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--ok);flex-shrink:0;"></span><span>${t('sel.fecha_linea', { fecha: esc(fechaCot) })}</span></div>` : ''}`
       : '';
     const heroCard = (folio || tieneVeh)
-      ? `<div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-bottom:20px;">${folio ? `<div style="display:flex;justify-content:flex-end;">${folioBlock}</div>` : ''}${vehBlock}</div>`
+      ? `<div class="card">${folio ? `<div style="display:flex;justify-content:flex-end;">${folioBlock}</div>` : ''}${vehBlock}</div>`
       : '';
     const hero = `${heroCard}
-    <div style="color:var(--dim);font-size:13px;line-height:1.55;padding-bottom:18px;border-bottom:1px solid var(--borde);margin-bottom:20px;">
+    <div class="nota-proforma">
       ${t('sel.no_proforma')}
     </div>`;
 
     const galeriaHTML = (Array.isArray(imagenesCliente) && imagenesCliente.length > 0)
-      ? `<div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-bottom:20px;">
-          <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-            <span style="display:inline-block;width:3px;height:16px;background:var(--rojo);border-radius:2px;"></span>
-            ${t('sel.imagenes')}
+      ? `<div class="card">
+          <div class="sec-label">${t('sel.imagenes')}
           </div>
           <div style="display:flex;flex-direction:column;gap:16px;">
             ${imagenesCliente.map(it => `
               <div>
-                <img src="${esc(it.url)}" alt="" style="width:100%;border-radius:10px;border:1px solid var(--borde);display:block;" />
+                <img src="${esc(it.url)}" alt="" style="width:100%;border-radius:8px;border:1px solid var(--borde);display:block;" />
                 ${it.texto ? `<div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5;">${esc(it.texto)}</div>` : ''}
               </div>`).join('')}
           </div>
@@ -1562,6 +1573,7 @@ function iniciar(payload) {
       resumenHTML = `
       <div class="resumen-box">
         <h3>${t('sel.tu_seleccion')}</h3>
+        <div class="caja lista">
         ${aprobados.map(({r,oi}) => {
           const op = r.opciones[oi];
           return `
@@ -1575,34 +1587,35 @@ function iniciar(payload) {
             </div>
           </div>`;
         }).join('')}
+        </div>
         <div class="resumen-total">
           <span>${t('ap.total_aprobado')}</span>
           <span class="monto-total">${fCRC(total)}</span>
         </div>
 
         ${esVip ? `
-        <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-top:12px;font-size:13.5px;line-height:1.6;color:var(--texto);">
-          <strong style="color:var(--rojo);">${t('header.vip')}</strong><br>${t('sel.vip_sin_adelanto')}
+        <div class="nota marca" style="margin-top:12px;font-size:13.5px;">
+          <strong style="color:var(--marca);">${t('header.vip')}</strong><br>${t('sel.vip_sin_adelanto')}
         </div>` : `
-        <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-top:12px;">
-          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">${t('sel.cuanto_abonar')}</div>
+        <div class="caja" style="margin-top:12px;">
+          <div class="sec-label">${t('sel.cuanto_abonar')}</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_adelanto">
-              <input type="radio" name="pago_opt" value="adelanto" checked onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
+              <input type="radio" name="pago_opt" value="adelanto" checked onchange="actualizarPago(${total})" style="accent-color:var(--marca);width:16px;height:16px;">
               <div style="flex:1;">
                 <div style="font-weight:600;font-size:14px;">${t('sel.adelanto_min')}</div>
-                <div style="color:var(--success);font-family:'Titillium Web',sans-serif;font-size:20px;letter-spacing:1px;">${fCRC(Math.round(total * 0.5))}</div>
+                <div style="color:var(--ok);font-family:'Titillium Web',sans-serif;font-size:20px;letter-spacing:1px;">${fCRC(Math.round(total * 0.5))}</div>
               </div>
             </label>
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_total">
-              <input type="radio" name="pago_opt" value="total" onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
+              <input type="radio" name="pago_opt" value="total" onchange="actualizarPago(${total})" style="accent-color:var(--marca);width:16px;height:16px;">
               <div style="flex:1;">
                 <div style="font-weight:600;font-size:14px;">${t('sel.pago_total')}</div>
-                <div style="color:var(--success);font-family:'Titillium Web',sans-serif;font-size:20px;letter-spacing:1px;">${fCRC(total)}</div>
+                <div style="color:var(--ok);font-family:'Titillium Web',sans-serif;font-size:20px;letter-spacing:1px;">${fCRC(total)}</div>
               </div>
             </label>
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border:1.5px solid var(--borde);border-radius:8px;" id="opt_otro">
-              <input type="radio" name="pago_opt" value="otro" onchange="actualizarPago(${total})" style="accent-color:var(--rojo);width:16px;height:16px;">
+              <input type="radio" name="pago_opt" value="otro" onchange="actualizarPago(${total})" style="accent-color:var(--marca);width:16px;height:16px;">
               <div style="flex:1;">
                 <div style="font-weight:600;font-size:14px;">${t('sel.otro_monto')}</div>
                 <div style="font-size:12px;color:var(--muted);">${t('sel.minimo', { monto: fCRC(Math.round(total * 0.5)) })}</div>
@@ -1612,7 +1625,7 @@ function iniciar(payload) {
               <input id="inp_otro_monto" type="number" min="${Math.round(total*0.5)}" max="${total}" step="1000"
                 placeholder="${t('sel.placeholder_monto')}"
                 style="width:100%;background:var(--card);border:1px solid var(--borde);border-radius:8px;padding:10px;color:var(--texto);font-size:14px;">
-              <div id="inp_otro_error" style="font-size:12px;color:var(--rojo);margin-top:4px;display:none;">${t('sel.error_monto', { min: fCRC(Math.round(total*0.5)), max: fCRC(total) })}</div>
+              <div id="inp_otro_error" style="font-size:12px;color:var(--marca);margin-top:4px;display:none;">${t('sel.error_monto', { min: fCRC(Math.round(total*0.5)), max: fCRC(total) })}</div>
             </div>
           </div>
         </div>`}
@@ -1644,7 +1657,7 @@ function iniciar(payload) {
     <div style="border-top:1px solid var(--borde);margin-top:20px;padding-top:22px;text-align:center;">
       <div style="font-size:15px;font-weight:700;color:var(--texto);">${t('footer.dudas')}</div>
       <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">${t('footer.escribinos')}</div>
-      <div style="margin-top:14px;"><a href="${consultaWa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:11px 20px;min-height:44px;box-sizing:border-box;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>${t('footer.btn')}</a></div>
+      <div style="margin-top:14px;"><a href="${consultaWa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--texto);color:#fff;padding:11px 20px;min-height:44px;box-sizing:border-box;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none;"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.302-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.213-3.733.89.923-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>${t('footer.btn')}</a></div>
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:16px;">Taller Ramos y Ramos · San José, Costa Rica</div>
     </div>`;
     document.getElementById('appRoot').innerHTML = hero + galeriaHTML + (vencida ? bannerVencida : instrucciones) + repsHTML + (vencida ? '' : resumenHTML) + tiemposEntregaHTML() + footer;
@@ -1685,7 +1698,7 @@ function iniciar(payload) {
     overlay.id = 'confirmModal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
     overlay.innerHTML = `
-      <div id="modalContent" style="background:var(--card);border:1px solid var(--borde);border-radius:12px;padding:24px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
+      <div id="modalContent" style="background:var(--card);border:1px solid var(--borde);border-radius:8px;padding:24px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
         <div style="font-weight:600;font-size:17px;color:var(--texto);margin-bottom:14px;">${t('modal.titulo')}</div>
         <p style="font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.5;">${t('modal.texto')}</p>
         <ul style="padding-left:20px;color:var(--texto);line-height:1.8;margin:0 0 4px;">
@@ -1693,8 +1706,8 @@ function iniciar(payload) {
         </ul>
         <p style="margin-top:18px;font-weight:500;color:var(--texto);font-size:15px;">${t('modal.confirmar_q')}</p>
         <div id="modalBtnRow" style="margin-top:22px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
-          <button id="btnModalVolver" style="background:var(--card2);color:var(--texto);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;min-width:100px;">${t('modal.volver')}</button>
-          <button id="btnModalConfirmar" style="background:var(--rojo);color:var(--card);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:600;min-width:140px;">${t('modal.confirmar')}</button>
+          <button id="btnModalVolver" style="background:var(--card);color:var(--texto);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;min-width:100px;">${t('modal.volver')}</button>
+          <button id="btnModalConfirmar" style="background:var(--marca);color:var(--card);padding:11px 20px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:600;min-width:140px;">${t('modal.confirmar')}</button>
         </div>
       </div>`;
 
@@ -1719,14 +1732,13 @@ function iniciar(payload) {
     modal.id = 'modalInstalacion';
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;';
     modal.innerHTML = `
-      <div style="background:var(--card);border:1px solid var(--borde);border-radius:16px;padding:28px;max-width:400px;width:100%;text-align:center;">
-        <div style="font-size:2rem;margin-bottom:12px;">🔧</div>
-        <div style="font-family:'Titillium Web',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:10px;">${t('mo.titulo')}</div>
+      <div style="background:var(--card);border:1px solid var(--borde);border-radius:8px;padding:28px;max-width:400px;width:100%;text-align:center;">
+        <div style="font-family:'Titillium Web',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--marca);margin-bottom:10px;">${t('mo.titulo')}</div>
         <p style="font-size:14px;color:var(--texto);line-height:1.6;margin-bottom:24px;">${t('mo.texto')}</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <button onclick="procesarAprobacion(true)" style="background:var(--rojo);color:var(--card);border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">${t('mo.si')}</button>
-          <button onclick="procesarAprobacion(false)" style="background:var(--card2);color:var(--texto);border:1px solid var(--borde);border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">${t('mo.no')}</button>
-          <button onclick="document.getElementById('modalInstalacion').remove()" style="background:transparent;color:var(--muted);border:none;border-radius:10px;padding:14px;font-size:14px;cursor:pointer;">${t('mo.volver')}</button>
+          <button onclick="procesarAprobacion(true)" style="background:var(--marca);color:var(--card);border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">${t('mo.si')}</button>
+          <button onclick="procesarAprobacion(false)" style="background:var(--card);color:var(--texto);border:1px solid var(--borde);border-radius:8px;padding:14px;font-size:14px;cursor:pointer;">${t('mo.no')}</button>
+          <button onclick="document.getElementById('modalInstalacion').remove()" style="background:transparent;color:var(--muted);border:none;border-radius:8px;padding:14px;font-size:14px;cursor:pointer;">${t('mo.volver')}</button>
         </div>
       </div>`;
     // Cerrar tocando el fondo: solo si el tap fue en el overlay mismo,
@@ -1795,7 +1807,7 @@ function iniciar(payload) {
         }
         const key = 'err.' + r.error;
         const msg = I18N.es[key] ? t(key) : t('err.generico');
-        if (status) status.innerHTML = `<p style="color:var(--rojo);font-size:13px;">⚠️ ${esc(msg)}</p>`;
+        if (status) status.innerHTML = `<p style="color:var(--marca);font-size:13px;">${esc(msg)}</p>`;
         if (btn) btn.disabled = false;
         return;
       }
@@ -1821,7 +1833,7 @@ function iniciar(payload) {
         window.location.reload();  // cargar() bifurca solo a la pantalla de aprobado
       }
     } catch(e) {
-      if (status) status.innerHTML = `<p style="color:var(--rojo);font-size:13px;">${t('error.guardar', { msg: esc(e.message) })}</p>`;
+      if (status) status.innerHTML = `<p style="color:var(--marca);font-size:13px;">${t('error.guardar', { msg: esc(e.message) })}</p>`;
       if (btn) btn.disabled = false;
     }
   };
