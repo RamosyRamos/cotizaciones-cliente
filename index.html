@@ -19,6 +19,9 @@
   <style>
     :root {
       --bg:     #F2F3F5;
+      --bg2:    #F7F8FA;
+      --bg3:    #EEF0F3;
+      --borde2: rgba(31,41,51,0.30);
       --card:   #FFFFFF;
       --borde:  #E1E4E8;
       --texto:  #1F2933;
@@ -90,11 +93,12 @@
       margin-bottom: 12px;
     }
     .sec-label.ok { color: var(--ok); }
-    /* Caja interior (cuentas, sinpe, resumen): blanco + borde, sin relleno de color */
+    /* Tres niveles y no más: página var(--bg) → tarjeta var(--card) → caja interna var(--bg2) */
     .caja {
-      background: var(--card); border: 1px solid var(--borde);
+      background: var(--bg2); border: 1px solid var(--borde);
       border-radius: var(--radio); padding: 14px;
     }
+    .caja.lista { padding: 0 14px; }
     /* Notas con barra izquierda de 3px: el color va en la barra, no en el fondo */
     .nota { border-left: 3px solid var(--borde); padding: 4px 0 4px 14px; color: var(--texto); font-size: 14px; line-height: 1.6; }
     .nota.alerta { border-left-color: var(--alerta); }
@@ -103,7 +107,7 @@
     .barra-ok { border-left: 3px solid var(--ok); }
     .barra-alerta { border-left: 3px solid var(--alerta); }
     /* Tabla de resumen de montos: filas con línea, sin cajas de color */
-    .tabla-resumen { border-top: 1px solid var(--borde); margin-top: 12px; }
+    .tabla-resumen { background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--radio); padding: 0 14px; margin-top: 12px; }
     .tabla-resumen .fila {
       display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
       padding: 10px 0; border-bottom: 1px solid var(--borde);
@@ -148,7 +152,7 @@
 
     .instrucciones { font-size: 14px; }
     /* Nota "no proforma": texto normal con barra izquierda de alerta, sin fondo */
-    .nota-proforma { border-left: 3px solid var(--alerta); padding: 4px 0 4px 14px; color: var(--texto); font-size: 13px; line-height: 1.55; margin-bottom: 16px; }
+    .nota-proforma { background: var(--bg2); border: 1px solid var(--borde); border-left: 3px solid var(--alerta); border-radius: var(--radio); padding: 12px 14px; color: var(--texto); font-size: 13px; line-height: 1.55; margin-bottom: 16px; }
     .nota-proforma b { color: var(--texto); font-weight: 700; }
 
     .cliente-repuesto { transition: border-color 0.2s; }
@@ -160,11 +164,11 @@
     .opciones-cliente { display: flex; flex-direction: column; gap: 8px; }
     .opcion-cliente {
       display: flex; align-items: center; gap: 12px;
-      background: var(--card); border: 1px solid var(--borde);
-      border-radius: var(--radio); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s;
+      background: var(--bg2); border: 1px solid var(--borde);
+      border-radius: var(--radio); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
     }
-    .opcion-cliente:hover { border-color: var(--muted); }
-    .opcion-cliente.seleccionada { border-color: var(--ok); box-shadow: inset 3px 0 0 var(--ok); }
+    .opcion-cliente:hover { background: var(--bg3); border-color: var(--borde2); }
+    .opcion-cliente.seleccionada { background: var(--bg3); border-color: var(--borde2); box-shadow: inset 3px 0 0 var(--ok); }
     .radio-dot {
       width: 18px; height: 18px; border-radius: 50%;
       border: 2px solid var(--muted); flex-shrink: 0;
@@ -185,17 +189,18 @@
     }
     .no-seleccionar {
       display: flex; align-items: center; gap: 12px;
-      background: transparent; border: 1px dashed var(--borde);
-      border-radius: var(--radio); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s; margin-top: 8px;
+      background: var(--bg2); border: 1px dashed var(--borde);
+      border-radius: var(--radio); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; margin-top: 8px;
     }
-    .no-seleccionar:hover { border-color: var(--muted); }
-    .no-seleccionar.seleccionada { border-color: var(--muted); box-shadow: inset 3px 0 0 var(--muted); }
+    .no-seleccionar:hover { background: var(--bg3); border-color: var(--borde2); }
+    .no-seleccionar.seleccionada { background: var(--bg3); border-color: var(--borde2); box-shadow: inset 3px 0 0 var(--muted); }
     .no-seleccionar span { font-size: 13px; color: var(--muted); }
 
     .resumen-box { margin-top: 16px; margin-bottom: 0; }
     .resumen-box h3 { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
     .resumen-item { padding: 12px 0; border-bottom: 1px solid var(--borde); }
     .resumen-item:last-of-type { border-bottom: none; }
+    .caja.lista > div:last-child, .caja.lista > .resumen-item:last-child { border-bottom: none; }
     .resumen-item-nombre { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
     .resumen-item-det { font-size: 14px; color: var(--muted); }
     .resumen-item-precio { font-family: 'Titillium Web', sans-serif; font-size: 20px; color: var(--ok); white-space: nowrap; text-align: right; }
@@ -241,7 +246,7 @@
     /* Seguimiento (en camino / en taller): badge del hero y fila de tiempos que aplica */
     .badge-estado { display:inline-block; margin-top:12px; padding:5px 12px; border-radius:999px; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--texto); background:var(--card); border:1px solid var(--borde); }
     .fila-tiempo { padding:6px 10px; border-radius:var(--radio); border:1px solid transparent; }
-    .fila-tiempo.aplica { border-color:var(--borde); box-shadow: inset 3px 0 0 var(--ok); }
+    .fila-tiempo.aplica { background:var(--card); border-color:var(--borde); box-shadow: inset 3px 0 0 var(--ok); }
     .fila-tiempo-tag { font-size:10px; font-weight:700; color:var(--ok); text-transform:uppercase; letter-spacing:0.6px; margin-left:6px; }
     @media (max-width: 600px) {
       .pago-grid-2col { grid-template-columns: 1fr !important; }
@@ -1011,7 +1016,7 @@ function mostrarYaAprobado(row) {
   const seleccionHTML = pendienteAdelanto && aprobadosSel.length > 0 ? `
     <div class="card mt">
       <div class="sec-label">${t('ap.resumen_pedido')}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="caja lista" style="display:flex;flex-direction:column;gap:8px;padding-top:8px;">
         ${aprobadosSel.map(({ rep, op }) => `
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
             <div style="color:var(--texto);">
@@ -1047,7 +1052,7 @@ function mostrarYaAprobado(row) {
   const resumenPedidoHTML = aprobadosSel.length > 0 ? `
     <div class="card mt">
       <div class="sec-label">${t('ap.resumen_pedido')}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="caja lista" style="display:flex;flex-direction:column;gap:8px;padding-top:8px;">
         ${aprobadosSel.map(({ rep, op }) => `
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
             <div style="color:var(--texto);">
@@ -1200,7 +1205,7 @@ function mostrarYaAprobado(row) {
       const resumenCierreHTML = aprobadosSel.length > 0 ? `
       <div class="card mt">
         <div class="sec-label">${t('ap.resumen_pedido')}</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="caja lista" style="display:flex;flex-direction:column;gap:8px;padding-top:8px;">
           ${aprobadosSel.map(({ rep, op }) => `
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:13px;border-bottom:1px solid var(--borde);padding-bottom:8px;">
               <div style="color:var(--texto);">
@@ -1383,7 +1388,7 @@ function cuentasBancariasHTML(cp) {
       <div style="flex:1;">
         <div class="sec-label">${t('cuentas.sinpe')}</div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-family:'Titillium Web',sans-serif;font-size:26px;letter-spacing:2px;color:var(--texto);">${esc(cp.sinpe.numero)}</div>
+          <div style="font-family:'Titillium Web',sans-serif;font-size:26px;letter-spacing:2px;color:var(--marca);">${esc(cp.sinpe.numero)}</div>
           ${btnCopiar(String(cp.sinpe.numero).replace(/\D/g, ''))}
         </div>
         ${cp.sinpe.titular ? `<div style="font-size:12px;color:var(--muted);">${esc(cp.sinpe.titular)}</div>` : ''}
@@ -1419,7 +1424,7 @@ function tiemposEntregaHTML(origenes = null, pie = null) {
   return `
   <div class="card mt">
     <div class="sec-label">${t('tiempos.titulo')}</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
+    <div class="caja" style="display:flex;flex-direction:column;gap:8px;">
       ${fila('usa', 'us', t('tiempos.usa'))}
       ${fila('europa', 'eu', t('tiempos.europa'))}
       ${fila('china', 'cn', t('tiempos.china'))}
@@ -1558,6 +1563,7 @@ function iniciar(payload) {
       resumenHTML = `
       <div class="resumen-box">
         <h3>${t('sel.tu_seleccion')}</h3>
+        <div class="caja lista">
         ${aprobados.map(({r,oi}) => {
           const op = r.opciones[oi];
           return `
@@ -1571,6 +1577,7 @@ function iniciar(payload) {
             </div>
           </div>`;
         }).join('')}
+        </div>
         <div class="resumen-total">
           <span>${t('ap.total_aprobado')}</span>
           <span class="monto-total">${fCRC(total)}</span>
