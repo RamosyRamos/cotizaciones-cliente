@@ -966,6 +966,10 @@ async function cargar() {
         anio: row.vehiculo?.anio || '',
         vin: row.vehiculo?.vin || '',
         fechaCotizacion: row.estado_changed_at || row.created_at || '',
+        // Vigencia (30 días): arranca cuando el CLIENTE la recibió — el RPC manda
+        // vigencia_desde = GREATEST(enviado_at, visible_portal_at) con fallback a
+        // estado_changed_at/created_at. Fallback local por si el RPC es anterior.
+        vigenciaDesde: row.vigencia_desde || row.estado_changed_at || row.created_at || '',
         estado: row.estado || '',
         tieneVehiculo: !!row.vehiculo,
       },
@@ -1447,9 +1451,13 @@ function tiemposEntregaHTML(origenes = null, pie = null) {
 
 function iniciar(payload) {
   const { cliente, repuestos: reps, imagenesCliente, esVip } = payload;
-  // Cotización vencida: 'cotizado' + created_at con más de 30 días. Bloquea la aprobación (no toca la vista "ya aprobada").
-  const vencida = !!cliente.fechaCotizacion
-    && (new Date(cliente.fechaCotizacion).getTime() + 30*24*60*60*1000) < Date.now()
+  // Cotización vencida: 'cotizado' + más de 30 días desde que el cliente la
+  // RECIBIÓ (vigenciaDesde = enviado_at / visible_portal_at). La fecha que se
+  // MUESTRA en el encabezado sigue siendo la de la cotización (fechaCotizacion).
+  // Bloquea la aprobación; no toca la vista "ya aprobada".
+  const vigenciaDesde = cliente.vigenciaDesde || cliente.fechaCotizacion;
+  const vencida = !!vigenciaDesde
+    && (new Date(vigenciaDesde).getTime() + 30*24*60*60*1000) < Date.now()
     && cliente.estado === 'cotizado';
   const bannerVencida = `
     <div class="card barra-alerta">
