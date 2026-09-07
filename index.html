@@ -27,6 +27,7 @@
       --texto:  #1F2933;
       --muted:  #5C6470;
       --marca:  #B83A2E;
+      --azul:   #15225F;
       --oro:    #8A6A1F;
       --ok:     #1E7F4F;
       --alerta: #B54708;
@@ -43,10 +44,10 @@
       position: sticky; top: 0; z-index: 100;
       box-shadow: var(--sombra);
     }
-    /* Único acento de marca: la línea roja bajo el header */
+    /* Único acento de marca: la línea azul → rojo bajo el header (degradado original) */
     .header::after {
       content: ''; position: absolute; left: 0; right: 0; bottom: 0;
-      height: 3px; background: var(--marca);
+      height: 3px; background: linear-gradient(90deg, var(--azul), var(--marca) 55%, transparent);
     }
     .logo {
       width: 44px; height: 44px;
