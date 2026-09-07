@@ -262,6 +262,18 @@
 
 <script>
 const SUPABASE_URL = 'https://lnsglpvobvfzbxpmyagc.supabase.co';
+// RPCs públicos de la página (lote 1): la puerta es el uuid, la validación y
+// la lista blanca de campos viven en el servidor (cotizacion_publica_get /
+// cotizacion_publica_aprobar). Devuelven jsonb; {error: código} en fallo.
+async function rpcPublico(fn, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
 const SUPABASE_KEY = 'sb_publishable_xlfpGDooN_Q2m7mOlAVpyg_Ew4Obv18';
 // Reseña de Google (vista de cierre). Vacío ⇒ el botón no se renderiza.
 const GOOGLE_REVIEW_URL = 'https://g.page/r/CToGsJW0_zc1EBM/review';
@@ -290,6 +302,14 @@ const I18N = {
     'error.guardar': '⚠️ Error al guardar: {msg}',
     'guardando': '⏳ Guardando tu selección...',
     'alert.ya_aprobada': 'Esta cotización ya fue aprobada. Recargá la página para ver el estado actualizado.',
+    'alert.cambio': 'La cotización cambió desde que la abriste (el taller actualizó repuestos o precios). Se va a recargar para que la revisés de nuevo.',
+    // lote 1: un texto por código de error del RPC cotizacion_publica_aprobar
+    'err.no_encontrada': 'Esta cotización ya no está disponible para aprobar. Escribinos si creés que es un error.',
+    'err.seleccion_invalida': 'La selección no coincide con la cotización actual. Recargá la página y volvé a elegir.',
+    'err.precios_incompletos': 'Una opción no tiene precio final; escribinos y la revisamos.',
+    'err.nada_aprobado': 'Seleccioná al menos un repuesto para aprobar.',
+    'err.pago_invalido': 'El monto a abonar no es válido. Revisalo e intentá de nuevo.',
+    'err.generico': 'No se pudo aprobar. Probá de nuevo o escribinos.',
     // catálogo (origen / prioridad / estado de la opción)
     'origen.usa': 'Estados Unidos',
     'origen.europa': 'Europa',
@@ -311,6 +331,7 @@ const I18N = {
     'ap.saldo_linea': 'Saldo del total: <strong style="color:var(--muted);">{monto}</strong> — se paga contra entrega.',
     'ap.a1_intro': 'Tu selección quedó registrada. Para <strong style="color:var(--texto);">iniciar el pedido</strong>, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.',
     'ap.a1_intro_sin_total': 'Tu selección ya fue registrada. Para iniciar el pedido, transferí el adelanto del 50% a cualquiera de las cuentas de abajo.',
+    'ap.a1_intro_vip': 'Tu selección quedó registrada. Como cliente VIP no requerís adelanto: el taller ya procede con el pedido.',
     'ap.total_aprobado': 'Total aprobado',
     'ap.adelanto_requerido': 'Adelanto requerido 50%',
     'ap.a2_intro': 'Ya registramos tu abono. Para <strong style="color:var(--texto);">completar el adelanto</strong> transferí lo que falta a cualquiera de las cuentas de abajo.',
@@ -384,8 +405,10 @@ const I18N = {
     'cuentas.titulo': 'Instrucciones de pago',
     'cuentas.intro1': 'Para proceder con el pedido se requiere el <strong>50% del costo</strong> de los repuestos como adelanto.',
     'cuentas.intro2': 'El adelanto o cancelación total se puede realizar por <strong>transferencia, SINPE o efectivo</strong>, y con <strong>tarjeta de crédito</strong> en días hábiles en nuestro establecimiento.',
-    'cuentas.bac_crc': '🏦 Cuenta BAC Colones',
-    'cuentas.bac_usd': '💵 Cuenta BAC Dólares',
+    'cuentas.cuenta': 'Cuenta {banco} {moneda}',
+    'cuentas.colones': 'Colones',
+    'cuentas.dolares': 'Dólares',
+    'cuentas.sinpe': 'SINPE Móvil',
     'cuentas.titular': 'Titular:',
     'cuentas.numero': 'N° cuenta:',
     // tiempos de entrega
@@ -415,6 +438,7 @@ const I18N = {
     'sel.btn_confirmar': 'Confirmar selección',
     'sel.preview': '👁 Vista previa interna — la aprobación está deshabilitada',
     'sel.selecciona_uno': 'Seleccioná al menos un repuesto para continuar',
+    'sel.vip_sin_adelanto': 'Como cliente VIP no requerís adelanto: al confirmar, el taller procede con el pedido y el pago se coordina a la entrega.',
     'footer.dudas': '¿Tenés dudas sobre tu cotización?',
     'footer.escribinos': 'Escribinos y con gusto te ayudamos.',
     'footer.btn': 'Escribir al taller',
@@ -451,6 +475,13 @@ const I18N = {
     'error.guardar': '⚠️ Error saving: {msg}',
     'guardando': '⏳ Saving your selection...',
     'alert.ya_aprobada': 'This quote has already been approved. Reload the page to see the updated status.',
+    'alert.cambio': 'The quote changed since you opened it (the shop updated parts or prices). The page will reload so you can review it again.',
+    'err.no_encontrada': 'This quote is no longer available for approval. Message us if you think this is a mistake.',
+    'err.seleccion_invalida': 'Your selection does not match the current quote. Reload the page and choose again.',
+    'err.precios_incompletos': 'One option has no final price; message us and we will fix it.',
+    'err.nada_aprobado': 'Select at least one part to approve.',
+    'err.pago_invalido': 'The amount to pay is not valid. Check it and try again.',
+    'err.generico': "We couldn't approve it. Try again or send us a message.",
     'origen.usa': 'United States',
     'origen.europa': 'Europe',
     'origen.china': 'China',
@@ -470,6 +501,7 @@ const I18N = {
     'ap.saldo_linea': 'Remaining balance: <strong style="color:var(--muted);">{monto}</strong> — due on delivery.',
     'ap.a1_intro': 'Your selection has been recorded. To <strong style="color:var(--texto);">start the order</strong>, transfer the 50% deposit to any of the accounts below.',
     'ap.a1_intro_sin_total': 'Your selection has been recorded. To start the order, transfer the 50% deposit to any of the accounts below.',
+    'ap.a1_intro_vip': 'Your selection has been recorded. As a VIP customer no deposit is required: the shop is already proceeding with the order.',
     'ap.total_aprobado': 'Approved total',
     'ap.adelanto_requerido': '50% deposit required',
     'ap.a2_intro': 'We have recorded your payment. To <strong style="color:var(--texto);">complete the deposit</strong>, transfer the remaining amount to any of the accounts below.',
@@ -538,8 +570,10 @@ const I18N = {
     'cuentas.titulo': 'Payment instructions',
     'cuentas.intro1': 'To proceed with the order, a <strong>50% deposit</strong> of the parts cost is required.',
     'cuentas.intro2': 'The deposit or full payment can be made by <strong>bank transfer, SINPE or cash</strong>, and by <strong>credit card</strong> on business days at our location.',
-    'cuentas.bac_crc': '🏦 BAC account (colones)',
-    'cuentas.bac_usd': '💵 BAC account (US dollars)',
+    'cuentas.cuenta': '{banco} account ({moneda})',
+    'cuentas.colones': 'colones',
+    'cuentas.dolares': 'US dollars',
+    'cuentas.sinpe': 'SINPE Móvil',
     'cuentas.titular': 'Account holder:',
     'cuentas.numero': 'Account no.:',
     'tiempos.tu_pedido': 'your order',
@@ -567,6 +601,7 @@ const I18N = {
     'sel.btn_confirmar': 'Confirm selection',
     'sel.preview': '👁 Internal preview — approval is disabled',
     'sel.selecciona_uno': 'Select at least one part to continue',
+    'sel.vip_sin_adelanto': 'As a VIP customer no deposit is required: once you confirm, the shop proceeds with the order and payment is arranged on delivery.',
     'footer.dudas': 'Questions about your quote?',
     'footer.escribinos': 'Message us and we will be glad to help.',
     'footer.btn': 'Message the workshop',
@@ -694,9 +729,10 @@ let verOriginal = false;        // toggle de la leyenda
 function textosLibresDe(row) {
   const out = [], seen = new Set();
   const add = x => { if (typeof x !== 'string') return; const k = x.trim(); if (!k || seen.has(k)) return; seen.add(k); out.push(k); };
-  for (const r of (row && row.repuestos) || []) {
-    add(r && r.nombre);
-    for (const op of (r && r.opciones) || []) { add(op && op.calidad); add(op && op.garantia); }
+  for (const l of (row && row.lineas) || []) {
+    add(l && l.nombre);
+    for (const op of (l && l.opciones) || []) { add(op && op.calidad); add(op && op.garantia); }
+    if (l && l.opcion) { add(l.opcion.calidad); add(l.opcion.garantia); }
   }
   return out;
 }
@@ -860,18 +896,16 @@ async function cargar() {
   }
 
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(cotId)}&select=*,clientes(nombre,apellido,idioma),vehiculos(patente,modelo,anio,marca,version,color,vin)`,
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-    );
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const rows = await res.json();
-    const row = rows[0];
-    if (!row) { showError('error.no_encontrada'); return; }
+    // Lote 1 (auditoría 2026-09-06): lista blanca server-side. El RPC solo
+    // devuelve cotizaciones visibles (no archivadas, no por_cotizar/perdido,
+    // cotizado solo si enviada/publicada) y nunca precioUSD/transUSD/
+    // numero_parte/suplidor. Del cliente: nombre/apellido/idioma.
+    const row = await rpcPublico('cotizacion_publica_get', { p_id: cotId });
+    if (!row || row.error) { showError('error.no_encontrada'); return; }
     if (row.es_vip) document.getElementById('vipBadge').style.display = 'inline-block';
 
-    // Idioma definitivo: override del toggle > clientes.idioma > navegador.
-    idiomaCliente = row.clientes?.idioma === 'en' ? 'en' : row.clientes?.idioma === 'es' ? 'es' : null;
+    // Idioma definitivo: override del toggle > cliente.idioma > navegador.
+    idiomaCliente = row.cliente?.idioma === 'en' ? 'en' : row.cliente?.idioma === 'es' ? 'es' : null;
     idioma = resolverIdioma();
     aplicarIdioma();
     // Texto libre en inglés: un solo batch, sin bloquear el render (originales al 0.6 mientras llega).
@@ -899,50 +933,47 @@ async function cargar() {
       return;
     }
 
-    const tipoCambio = Number(row.tipo_cambio_usado) || 530;
-    const clienteNombre = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || '';
-    const vehiculoDesc = [row.vehiculos?.patente, row.vehiculos?.modelo, row.vehiculos?.anio].filter(Boolean).join(' · ');
+    const clienteNombre = [row.cliente?.nombre, row.cliente?.apellido].filter(Boolean).join(' ');
 
+    // El payload ya trae el precio final por opción (misma regla de siempre,
+    // calculada en el RPC), las opciones con precio y los repuestos con
+    // opciones. repuesto_idx / opcion_idx son los índices REALES del jsonb:
+    // la aprobación se manda con ellos, nunca con la posición del arreglo.
     const payload = {
       _cotizacionId: row.id,
-      taller: 'Taller Ramos y Ramos',
+      _hash: row.repuestos_hash || null,
+      esVip: !!row.es_vip,
       imagenesCliente: Array.isArray(row.imagenes_cliente) ? row.imagenes_cliente : [],
       cliente: {
         nombre: clienteNombre,
-        vehiculo: vehiculoDesc,
         numero: row.numero || null,
-        patente: row.vehiculos?.patente || '',
-        modelo: row.vehiculos?.modelo || '',
-        version: row.vehiculos?.version || '',
-        anio: row.vehiculos?.anio || '',
-        color: row.vehiculos?.color || '',
-        vin: row.vehiculos?.vin || '',
-        createdAt: row.created_at || '',
+        patente: row.vehiculo?.patente || '',
+        modelo: row.vehiculo?.modelo || '',
+        version: row.vehiculo?.version || '',
+        anio: row.vehiculo?.anio || '',
+        vin: row.vehiculo?.vin || '',
         fechaCotizacion: row.estado_changed_at || row.created_at || '',
         estado: row.estado || '',
-        tieneVehiculo: !!row.vehiculos,
+        tieneVehiculo: !!row.vehiculo,
       },
-      repuestos: (row.repuestos || [])
-        .map(r => ({
-          nombre: r.nombre || '',
-          _np: r.numero_parte || r.nParte || '',
-          cantidad: r.cantidad || 1,
-          prioridad: r.prioridad || 'Recomendado',
-          nota: r.nota || '',
-          opciones: (r.opciones || [])
-            .filter(op => (Number(op.precioUSD) || 0) > 0)
-            .map(op => ({
-              calidad: op.calidad || '',
-              estado: op.estado || '',
-              origen: op.origen || 'usa',
-              marca: op.marca || '',
-              garantia: op.garantia || '',
-              precioFinalCRC: Number(op.precioFinalCRC) > 0
-                ? Number(op.precioFinalCRC)
-                : Math.round(((Number(op.precioUSD) || 0) + (Number(op.transUSD) || 0)) * tipoCambio * (r.cantidad || 1)),
-            })),
-        }))
-        .filter(r => r.opciones.length > 0),
+      repuestos: (Array.isArray(row.lineas) ? row.lineas : [])
+        .filter(l => l && Array.isArray(l.opciones) && l.opciones.length > 0 && l.repuesto_idx != null)
+        .map(l => ({
+          repuesto_idx: l.repuesto_idx,
+          nombre: l.nombre || '',
+          cantidad: Number(l.cantidad) || 1,
+          prioridad: l.prioridad || 'Recomendado',
+          nota: l.nota || '',
+          opciones: l.opciones.map(op => ({
+            opcion_idx: op.opcion_idx,
+            calidad: op.calidad || '',
+            estado: op.estado || '',
+            origen: op.origen || 'usa',
+            marca: op.marca || '',
+            garantia: op.garantia || '',
+            precio: Number(op.precio) || 0,
+          })),
+        })),
     };
 
     iniciar(payload);
@@ -953,13 +984,15 @@ async function cargar() {
 
 function mostrarYaAprobado(row) {
   vistaActual = () => mostrarYaAprobado(row);
-  const clienteNombre = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || '';
+  const clienteNombre = [row.cliente?.nombre, row.cliente?.apellido].filter(Boolean).join(' ');
   const fecha = fechaCR(row.cliente_aprobado_at);   // '' sin sello (aprobación manual del taller)
   const estado = row.estado || '';
   const folio = row.numero ? `COT-${String(row.numero).padStart(4, '0')}` : '';
-  // Los _calc se limpian cuando la cotización avanza; leer el canónico primero.
-  const total = Number(row.total_aprobado ?? row.total_aprobado_calc ?? 0);
-  const adelantoReq = Number(row.adelanto_requerido_calc ?? Math.round(total * 0.5));
+  const esVip = !!row.es_vip;
+  // Los _calc se limpian cuando la cotización avanza; leer el canónico primero
+  // (`total` = total_aprobado en el payload). VIP: sin adelanto (O6).
+  const total = Number(row.total ?? row.total_aprobado_calc ?? 0);
+  const adelantoReq = esVip ? 0 : Number(row.adelanto_requerido_calc ?? Math.round(total * 0.5));
   const adelantoPagado = Number(row.adelanto_realizado ?? 0);
   const faltaAdelanto = Math.max(0, adelantoReq - adelantoPagado);   // contra el 50%, no contra el total
   const saldoTotal = Math.max(0, total - adelantoPagado);            // línea gris informativa (contra entrega)
@@ -967,16 +1000,11 @@ function mostrarYaAprobado(row) {
   // En 'en_camino'/'cobrado'/etc. el pago ya se coordinó → seguimiento.
   const pendienteAdelanto = estado === 'aprobado';
 
-  // Selección aprobada, reconstruida de cliente_seleccion + repuestos (null-safe:
-  // el camino manual puede dejar entradas null en el array).
-  const aprobadosSel = (Array.isArray(row.cliente_seleccion) ? row.cliente_seleccion : [])
-    .filter(s => s && s.rejected === false)
-    .map(s => {
-      const rep = (row.repuestos || [])[s.repuesto_idx];
-      const op = rep && Array.isArray(rep.opciones) ? rep.opciones[s.opcion_idx] : null;
-      return rep ? { rep, op } : null;
-    })
-    .filter(Boolean);
+  // Selección aprobada: con decisión tomada el RPC devuelve solo las líneas
+  // aprobadas, cada una con su `opcion` elegida (precio ya calculado).
+  const aprobadosSel = (Array.isArray(row.lineas) ? row.lineas : [])
+    .filter(l => l && l.opcion)
+    .map(l => ({ rep: l, op: l.opcion }));
 
   const seleccionHTML = pendienteAdelanto && aprobadosSel.length > 0 ? `
     <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
@@ -988,7 +1016,7 @@ function mostrarYaAprobado(row) {
               ${esc(tx(rep.nombre || ''))}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
               ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([tx(op.calidad), op.marca].filter(Boolean).join(' · '))}</div>` : ''}
             </div>
-            ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
+            ${op && op.precio != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precio)}</div>` : ''}
           </div>`).join('')}
       </div>
       ${row.con_instalacion != null ? `
@@ -1025,7 +1053,7 @@ function mostrarYaAprobado(row) {
               ${esc(tx(rep.nombre || ''))}${(rep.cantidad || 1) > 1 ? ` <span style="color:var(--muted);">× ${rep.cantidad}</span>` : ''}
               ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([tx(op.calidad), op.marca].filter(Boolean).join(' · '))}</div>` : ''}
             </div>
-            ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
+            ${op && op.precio != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precio)}</div>` : ''}
           </div>`).join('')}
       </div>
       ${row.con_instalacion != null ? `
@@ -1071,17 +1099,18 @@ function mostrarYaAprobado(row) {
     const resumenHTML = total > 0 ? `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
         <div style="text-align:center;color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px;">
-          ${t('ap.a1_intro')}
+          ${esVip ? t('ap.a1_intro_vip') : t('ap.a1_intro')}
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
           ${cajaNeutra(t('ap.total_aprobado'), total)}
-          ${cajaRoja(t('ap.adelanto_requerido'), adelantoReq)}
+          ${esVip ? '' : cajaRoja(t('ap.adelanto_requerido'), adelantoReq)}
         </div>
       </div>` : `
       <div class="card" style="text-align:center;color:var(--muted);padding:24px;">
-        <p>${t('ap.a1_intro_sin_total')}</p>
+        <p>${esVip ? t('ap.a1_intro_vip') : t('ap.a1_intro_sin_total')}</p>
       </div>`;
-    cuerpoHTML = seleccionHTML + resumenHTML + cuentasBancariasHTML() + tiemposEntregaHTML() + btnComprobanteHTML;
+    // VIP (O6): sin adelanto → sin cuentas ni comprobante.
+    cuerpoHTML = seleccionHTML + resumenHTML + (esVip ? '' : cuentasBancariasHTML(row.cuentas_pago)) + tiemposEntregaHTML() + (esVip ? '' : btnComprobanteHTML);
   } else if (pendienteAdelanto && faltaAdelanto > 0) {
     // A2 — adelanto parcial: mostrar lo abonado, lo que falta, y las cuentas.
     cuerpoHTML = `
@@ -1094,7 +1123,7 @@ function mostrarYaAprobado(row) {
           ${cajaRoja(t('ap.falta_adelanto'), faltaAdelanto)}
         </div>
         ${lineaSaldo}
-      </div>` + cuentasBancariasHTML() + tiemposEntregaHTML() + btnComprobanteHTML;
+      </div>` + cuentasBancariasHTML(row.cuentas_pago) + tiemposEntregaHTML() + btnComprobanteHTML;
     cuerpoHTML = seleccionHTML + cuerpoHTML;
   } else if (pendienteAdelanto) {
     // A3 — adelanto cubierto o superado: sin cuentas, confirmación tranquilizadora.
@@ -1191,7 +1220,7 @@ function mostrarYaAprobado(row) {
                 ${op ? `<div style="color:var(--muted);font-size:12px;margin-top:2px;">${flagHTML(op.origen)} ${esc([tx(op.calidad), op.marca].filter(Boolean).join(' · '))}</div>` : ''}
                 ${op && String(op.garantia || '').trim() ? `<div style="color:var(--success);font-size:12px;margin-top:2px;">${t('garantia_prefijo')}${esc(tx(op.garantia))}</div>` : ''}
               </div>
-              ${op && op.precioFinalCRC != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precioFinalCRC)}</div>` : ''}
+              ${op && op.precio != null ? `<div style="color:var(--texto);white-space:nowrap;">${fCRC(op.precio)}</div>` : ''}
             </div>`).join('')}
         </div>
       </div>` : '';
@@ -1200,8 +1229,8 @@ function mostrarYaAprobado(row) {
       // Solo en 'cobrado': el cobro final va por el libro del Taller y NO
       // actualiza adelanto_realizado, así que acá no se calcula saldo — cobrado
       // es pagado por definición. 'perdido' es cierre interno: sin card.
-      if (estado === 'cobrado' && row.total_aprobado != null) {
-        const tot = Number(row.total_aprobado) || 0;
+      if (estado === 'cobrado' && row.total != null) {
+        const tot = Number(row.total) || 0;
         pagoHTML = `
       <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:16px;">
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">${t('cierre.resumen_pago')}</div>
@@ -1254,8 +1283,8 @@ function mostrarYaAprobado(row) {
   pintarEstadoTrad();
 
   setTimeout(() => {
-    const cN = [row.clientes?.nombre, row.clientes?.apellido].filter(Boolean).join(' ') || row.cliente_nombre || t('wa.cliente_default');
-    const veh = [row.vehiculos?.patente, row.vehiculos?.modelo, row.vehiculos?.anio].filter(Boolean).join(' · ') || row.cliente_vehiculo || '';
+    const cN = [row.cliente?.nombre, row.cliente?.apellido].filter(Boolean).join(' ') || t('wa.cliente_default');
+    const veh = [row.vehiculo?.patente, row.vehiculo?.modelo, row.vehiculo?.anio].filter(Boolean).join(' · ');
 
     const btn = document.getElementById('btnContactarTaller');
     if (btn) btn.addEventListener('click', function(e) {
@@ -1304,7 +1333,7 @@ function mostrarYaAprobado(row) {
           if (specs || op.marca) l += `\n  → ${specs}${op.marca ? (specs ? ' · ' : '') + op.marca : ''}`;
           l += t('wa.comp_origen', { o: nombreOrigen(op.origen) });
           if (op.garantia) l += `\n  → 🛡️ ${tx(op.garantia)}`;
-          if (op.precioFinalCRC != null) l += `\n  → ${fCRC(op.precioFinalCRC)}`;
+          if (op.precio != null) l += `\n  → ${fCRC(op.precio)}`;
         }
         return l;
       });
@@ -1336,10 +1365,45 @@ function mostrarYaAprobado(row) {
 
 cargar();
 
-// Bloque de cuentas bancarias + tiempos de entrega. Estático (solo usa
-// copiarTexto, que es global). Reutilizado por iniciar() (antes de aprobar)
-// y por mostrarYaAprobado() en estado 'aprobado' (para pagar el adelanto).
-function cuentasBancariasHTML() {
+// Bloque de cuentas de pago: datos de taller_config.cuentas_pago (los manda
+// el RPC SOLO en estado 'aprobado' y en la pantalla de selección no hace
+// falta). Mismo diseño de siempre; los textos fijos siguen en I18N. La intro
+// en ES es la editable del taller (cp.intro); en EN, la traducción estática.
+// Reutilizado por mostrarYaAprobado() en A1/A2 (para pagar el adelanto).
+function cuentasBancariasHTML(cp) {
+  if (!cp || typeof cp !== 'object') return '';
+  const cuentas = Array.isArray(cp.cuentas) ? cp.cuentas : [];
+  const btnCopiar = v => `<button onclick="copiarTexto('${esc(String(v).replace(/'/g, ''))}', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px;font-size:12px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;">📋</button>`;
+  const intro = idioma === 'en' || !cp.intro
+    ? `${t('cuentas.intro1')}<br>${t('cuentas.intro2')}`
+    : esc(cp.intro);
+  const cuentaHTML = c => `
+      <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">${c.moneda === 'USD' ? '💵' : '🏦'} ${t('cuentas.cuenta', { banco: esc(c.banco || ''), moneda: c.moneda === 'USD' ? t('cuentas.dolares') : t('cuentas.colones') })}</div>
+        <div style="font-size:13px;line-height:2;color:var(--texto);">
+          ${c.titular ? `<div><span style="color:var(--muted);">${t('cuentas.titular')}</span> ${esc(c.titular)}</div>` : ''}
+          ${c.numero ? `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="color:var(--muted);">${t('cuentas.numero')}</span> <strong>${esc(c.numero)}</strong>
+            ${btnCopiar(c.numero)}
+          </div>` : ''}
+          ${c.iban ? `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="color:var(--muted);">IBAN:</span> <strong>${esc(c.iban)}</strong>
+            ${btnCopiar(c.iban)}
+          </div>` : ''}
+        </div>
+      </div>`;
+  const sinpe = cp.sinpe && cp.sinpe.numero ? `
+    <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px;">
+      <div style="font-size:28px;">📱</div>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;">${t('cuentas.sinpe')}</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-family:'Titillium Web',sans-serif;font-size:26px;letter-spacing:2px;color:var(--navy);">${esc(cp.sinpe.numero)}</div>
+          ${btnCopiar(String(cp.sinpe.numero).replace(/\D/g, ''))}
+        </div>
+        ${cp.sinpe.titular ? `<div style="font-size:12px;color:var(--muted);">${esc(cp.sinpe.titular)}</div>` : ''}
+      </div>
+    </div>` : '';
   return `
   <div style="background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:20px;margin-top:20px;">
     <div style="font-family:'Titillium Web',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--rojo);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
@@ -1347,49 +1411,10 @@ function cuentasBancariasHTML() {
       ${t('cuentas.titulo')}
     </div>
     <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;">
-      ${t('cuentas.intro1')}<br>
-      ${t('cuentas.intro2')}
+      ${intro}
     </div>
-    <div class="pago-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-      <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">${t('cuentas.bac_crc')}</div>
-        <div style="font-size:13px;line-height:2;color:var(--texto);">
-          <div><span style="color:var(--muted);">${t('cuentas.titular')}</span> Gustavo Adolfo Ramos Fallas</div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="color:var(--muted);">${t('cuentas.numero')}</span> <strong>935377267</strong>
-            <button onclick="copiarTexto('935377267', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px;font-size:12px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;">📋</button>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="color:var(--muted);">IBAN:</span> <strong>CR82010200009353772678</strong>
-            <button onclick="copiarTexto('CR82010200009353772678', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px;font-size:12px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;">📋</button>
-          </div>
-        </div>
-      </div>
-      <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">${t('cuentas.bac_usd')}</div>
-        <div style="font-size:13px;line-height:2;color:var(--texto);">
-          <div><span style="color:var(--muted);">${t('cuentas.titular')}</span> Gustavo Adolfo Ramos Fallas</div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="color:var(--muted);">${t('cuentas.numero')}</span> <strong>940809213</strong>
-            <button onclick="copiarTexto('940809213', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px;font-size:12px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;">📋</button>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="color:var(--muted);">IBAN:</span> <strong>CR69010200009408092136</strong>
-            <button onclick="copiarTexto('CR69010200009408092136', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px;font-size:12px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;">📋</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px;">
-      <div style="font-size:28px;">📱</div>
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;">SINPE Móvil</div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-family:'Titillium Web',sans-serif;font-size:26px;letter-spacing:2px;color:var(--navy);">8343-9257</div>
-          <button onclick="copiarTexto('83439257', this)" style="background:none;border:1px solid var(--borde);border-radius:6px;padding:6px;font-size:12px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;">📋</button>
-        </div>
-      </div>
-    </div>
+    ${cuentas.length > 0 ? `<div class="pago-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">${cuentas.map(cuentaHTML).join('')}</div>` : ''}
+    ${sinpe}
   </div>`;
 }
 
@@ -1423,7 +1448,7 @@ function tiemposEntregaHTML(origenes = null, pie = null) {
 }
 
 function iniciar(payload) {
-  const { taller, cliente, repuestos: reps, imagenesCliente } = payload;
+  const { cliente, repuestos: reps, imagenesCliente, esVip } = payload;
   // Cotización vencida: 'cotizado' + created_at con más de 30 días. Bloquea la aprobación (no toca la vista "ya aprobada").
   const vencida = !!cliente.fechaCotizacion
     && (new Date(cliente.fechaCotizacion).getTime() + 30*24*60*60*1000) < Date.now()
@@ -1532,7 +1557,7 @@ function iniciar(payload) {
                 <div class="opcion-cliente-titulo">${esc(tx(op.calidad))} · ${esc(estadoLabel(op.estado))}${op.marca ? ' · ' + esc(op.marca) : ''}</div>
                 <div class="opcion-cliente-meta">${flagHTML(op.origen)} ${nombreOrigen(op.origen)}${op.garantia ? ' · ' + t('garantia_prefijo') + esc(tx(op.garantia)) : ''}</div>
               </div>
-              <div class="opcion-cliente-precio">${fCRC(op.precioFinalCRC)}</div>
+              <div class="opcion-cliente-precio">${fCRC(op.precio)}</div>
             </label>
           `).join('')}
           <label class="no-seleccionar ${selIdx === -1 ? 'seleccionada' : ''}" onclick="seleccionar(${ri},-1)">
@@ -1548,7 +1573,7 @@ function iniciar(payload) {
     let resumenHTML = '';
     if (algunoAprobado) {
       const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi !== null && x.oi >= 0);
-      const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precioFinalCRC, 0);
+      const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precio, 0);
       resumenHTML = `
       <div class="resumen-box">
         <h3>${t('sel.tu_seleccion')}</h3>
@@ -1561,7 +1586,7 @@ function iniciar(payload) {
                 <div class="resumen-item-nombre">${esc(tx(r.nombre))}${r.cantidad > 1 ? ` <span style="font-size:12px;font-weight:500;color:var(--muted);">× ${r.cantidad}</span>` : ''}</div>
                 <div class="resumen-item-det">${flagHTML(op.origen)} ${esc(tx(op.calidad))} · ${esc(estadoLabel(op.estado))}${op.marca?' · '+esc(op.marca):''}${op.garantia?' · 🛡️ '+esc(tx(op.garantia)):''}</div>
               </div>
-              <div class="resumen-item-precio">${fCRC(op.precioFinalCRC)}</div>
+              <div class="resumen-item-precio">${fCRC(op.precio)}</div>
             </div>
           </div>`;
         }).join('')}
@@ -1570,6 +1595,10 @@ function iniciar(payload) {
           <span class="monto-total">${fCRC(total)}</span>
         </div>
 
+        ${esVip ? `
+        <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-top:12px;font-size:13.5px;line-height:1.6;color:var(--texto);">
+          <strong style="color:var(--rojo);">${t('header.vip')}</strong><br>${t('sel.vip_sin_adelanto')}
+        </div>` : `
         <div style="background:var(--card2);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-top:12px;">
           <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">${t('sel.cuanto_abonar')}</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
@@ -1601,7 +1630,7 @@ function iniciar(payload) {
               <div id="inp_otro_error" style="font-size:12px;color:var(--rojo);margin-top:4px;display:none;">${t('sel.error_monto', { min: fCRC(Math.round(total*0.5)), max: fCRC(total) })}</div>
             </div>
           </div>
-        </div>
+        </div>`}
 
         <div class="row" style="margin-top:18px;">
           <button class="btn btn-navy" id="btnConfirmar" onclick="handleSubmitClick()"${isPreview ? ' disabled style="opacity:0.55;cursor:not-allowed;pointer-events:none;"' : ''}>
@@ -1611,9 +1640,6 @@ function iniciar(payload) {
         ${isPreview ? `<p style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;">${t('sel.preview')}</p>` : ''}
         <div id="confirmStatus" style="margin-top:10px;"></div>
       </div>`;
-
-      window._aprobados = aprobados;
-      window._total = total;
 
     } else {
       resumenHTML = `
@@ -1728,14 +1754,15 @@ function iniciar(payload) {
     if (isPreview) return;  // defensa extra: en preview nunca se aprueba
     document.getElementById('modalInstalacion')?.remove();
     const aprobados = reps.map((r,ri) => ({r, oi: sel[ri]})).filter(x => x.oi !== null && x.oi >= 0);
-    const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precioFinalCRC, 0);
-    const adelantoMin = Math.round(total * 0.5);
+    const total = aprobados.reduce((sum,x) => sum + x.r.opciones[x.oi].precio, 0);
+    // VIP (O6): sin adelanto — se manda 'adelanto' con monto 0 y el RPC lo valida.
+    const adelantoMin = esVip ? 0 : Math.round(total * 0.5);
 
-    const optPago = document.querySelector('input[name="pago_opt"]:checked')?.value || 'adelanto';
+    const optPago = esVip ? 'adelanto' : (document.querySelector('input[name="pago_opt"]:checked')?.value || 'adelanto');
     let montoPago = adelantoMin;
-    if (optPago === 'total') {
+    if (!esVip && optPago === 'total') {
       montoPago = total;
-    } else if (optPago === 'otro') {
+    } else if (!esVip && optPago === 'otro') {
       const inp = parseInt(document.getElementById('inp_otro_monto')?.value, 10) || 0;
       if (inp < adelantoMin || inp > total) {
         const err = document.getElementById('inp_otro_error');
@@ -1750,77 +1777,58 @@ function iniciar(payload) {
     if (status) status.innerHTML = `<p style="color:var(--muted);font-size:13px;">${t('guardando')}</p>`;
 
     try {
-      const clienteSeleccion = sel.map((oi, ri) => {
-        if (oi !== null && oi >= 0) return { repuesto_idx: ri, opcion_idx: oi, rejected: false };
-        if (oi === -1) return { repuesto_idx: ri, rejected: true };
-        return { repuesto_idx: ri, rejected: true }; // null = rechazo implícito
+      // Selección por índices REALES del jsonb (repuesto_idx / opcion_idx del
+      // payload). "No deseo" y sin decidir van rechazados; el RPC valida rango,
+      // unicidad y precio, y lo guarda normalizado.
+      const clienteSeleccion = reps.map((r, ri) => {
+        const oi = sel[ri];
+        const op = oi !== null && oi >= 0 ? r.opciones[oi] : null;
+        return op
+          ? { repuesto_idx: r.repuesto_idx, opcion_idx: op.opcion_idx, rejected: false }
+          : { repuesto_idx: r.repuesto_idx, opcion_idx: null, rejected: true };
       });
 
-      const ALREADY_APPROVED = ['aprobado','en_camino','listo','agendado','en_taller','cobrado','perdido'];
-      if (payload._cotizacionId) {
-        try {
-          const chkRes = await fetch(`${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}&select=cliente_aprobado_at,estado`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-          });
-          const [fresh] = await chkRes.json();
-          if (fresh && (fresh.cliente_aprobado_at || ALREADY_APPROVED.includes(fresh.estado))) {
-            if (btn) btn.disabled = false;
-            alert(t('alert.ya_aprobada'));
-            window.location.reload();
-            return;
-          }
-        } catch(e) { /* fail open */ }
+      // Lock + guard + hash + totales viven en el RPC (lote 1). Sin PATCH.
+      const r = await rpcPublico('cotizacion_publica_aprobar', {
+        p_id: payload._cotizacionId,
+        p_seleccion: clienteSeleccion,
+        p_con_instalacion: !!conInstalacion,
+        p_pago: optPago,
+        p_monto: montoPago,
+        p_hash: payload._hash,
+      });
+      if (r && r.error) {
+        if (r.error === 'ya_aprobada') {            // otra pestaña / el taller ya la aprobó
+          alert(t('alert.ya_aprobada'));
+          window.location.reload();
+          return;
+        }
+        if (r.error === 'cotizacion_cambio') {      // el taller editó la lista: recargar y volver a elegir
+          alert(t('alert.cambio'));
+          window.location.reload();
+          return;
+        }
+        const key = 'err.' + r.error;
+        const msg = I18N.es[key] ? t(key) : t('err.generico');
+        if (status) status.innerHTML = `<p style="color:var(--rojo);font-size:13px;">⚠️ ${esc(msg)}</p>`;
+        if (btn) btn.disabled = false;
+        return;
       }
 
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal',
-          },
-          body: JSON.stringify({
-            cliente_seleccion: clienteSeleccion,
-            cliente_aprobado_at: new Date().toISOString(),
-            adelanto_requerido_calc: adelantoMin,
-            adelanto_requerido: adelantoMin,
-            total_aprobado_calc: total,
-            total_aprobado: total,
-            estado: 'aprobado',
-            con_instalacion: conInstalacion,
-            pago_elegido: optPago,
-            monto_pago_elegido: montoPago,
-          }),
-        }
-      );
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-
+      // Aviso al taller: el server arma título/cuerpo/url/tag desde la fila
+      // (exige el sello reciente). Fire-and-forget.
       fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-        body: JSON.stringify({
-          to_user_nombres: ['Gustavo Ramos', 'Joseline Guzman'],
-          event_type: 'cotizacion_aprobada',
-          title: '👤 Cliente aprobó cotización',
-          body: `${cliente.vehiculo || cliente.nombre || ''}`,
-          url: '/repuestos',
-          tag: `cotizacion-aprobada-${payload._cotizacionId}`,
-        }),
+        body: JSON.stringify({ event_type: 'cotizacion_aprobada', cotizacion_id: payload._cotizacionId }),
       }).catch(() => {});
 
-      // Transición a la pantalla de aprobado con el row fresco (trae los
-      // campos recién escritos + joins de clientes/vehiculos). El comprobante
-      // por WhatsApp ahora es un botón de esa pantalla — sin WA automático.
+      // Transición a la pantalla de aprobado con el payload fresco (líneas
+      // aprobadas con su opción, totales y cuentas). El comprobante por
+      // WhatsApp es un botón de esa pantalla — sin WA automático.
       try {
-        const rres = await fetch(
-          `${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.${encodeURIComponent(payload._cotizacionId)}&select=*,clientes(nombre,apellido,idioma),vehiculos(patente,modelo,anio,marca,version,color,vin)`,
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-        );
-        const [rrow] = await rres.json();
-        if (!rrow) throw new Error('sin fila');
+        const rrow = await rpcPublico('cotizacion_publica_get', { p_id: payload._cotizacionId });
+        if (!rrow || rrow.error) throw new Error('sin fila');
         window.scrollTo({ top: 0, behavior: 'auto' });
         filaActual = rrow;
         mostrarYaAprobado(rrow);
