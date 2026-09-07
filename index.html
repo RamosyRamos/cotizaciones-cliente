@@ -146,8 +146,13 @@
     .mf.cn{background:radial-gradient(circle 2.2px at 22% 36%, #FFDE00 97%, transparent 100%), #DE2910}
     .mf.cn::after{content:''}
 
-    .cliente-hero { padding: 24px; text-align: center; }
-    .cliente-hero h2 { font-family: 'Titillium Web', sans-serif; font-size: 26px; letter-spacing: 2px; color: var(--texto); }
+    /* Heros de estado (aprobada / pedido realizado / en el taller / cierre): diseño
+       original de main — centrado, ícono grande arriba, h2 28px — con la paleta nueva.
+       ÚNICA EXCEPCIÓN a la regla "sin emojis en títulos": el ícono del hero
+       (✅ 🚚 📦 🔧) se conserva a propósito como señal visual del estado. */
+    .cliente-hero { padding: 24px; margin-bottom: 20px; text-align: center; }
+    .cliente-hero .hero-icono { font-size: 3rem; line-height: 1; margin-bottom: 12px; }
+    .cliente-hero h2 { font-family: 'Titillium Web', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--texto); }
     .cliente-hero p { color: var(--muted); font-size: 14px; margin-top: 6px; }
     .cliente-hero .taller-name { color: var(--marca); font-weight: 700; }
 
@@ -1045,6 +1050,7 @@ function mostrarYaAprobado(row) {
   // Hero por defecto (aprobado / rama B); las ramas en_camino y listo ponen el suyo.
   let heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
+      <div class="hero-icono">✅</div>
       <h2>${t('ap.hero_aprobada')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fecha ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('ap.aprobada_el', { fecha: esc(fecha) })}</p>` : ''}
@@ -1142,6 +1148,7 @@ function mostrarYaAprobado(row) {
     const fPedido = fechaCR(row.estado_changed_at);
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
+      <div class="hero-icono">🚚</div>
       <h2>${t('seg.hero_pedido')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fPedido ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('seg.pedido_el', { fecha: esc(fPedido) })}</p>` : ''}
@@ -1158,6 +1165,7 @@ function mostrarYaAprobado(row) {
     const fLlegada = estado === 'listo' ? fechaCR(row.estado_changed_at) : '';
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
+      <div class="hero-icono">${enTaller ? '🔧' : '📦'}</div>
       <h2>${enTaller ? t('seg.hero_en_taller') : t('seg.hero_listo')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       ${fLlegada ? `<p style="color:var(--muted);font-size:13px;margin-top:6px;">${t('seg.llegaron_el', { fecha: esc(fLlegada) })}</p>` : ''}
@@ -1194,6 +1202,7 @@ function mostrarYaAprobado(row) {
     const fCierre = fechaCR(row.estado_changed_at);
     heroHTML = `
     <div class="cliente-hero" style="margin-top:16px;">
+      <div class="hero-icono">✅</div>
       <h2>${t('cierre.hero')}</h2>
       ${clienteNombre ? `<p style="margin-top:10px;">${esc(clienteNombre)}</p>` : ''}
       <p style="color:var(--texto);font-size:14px;margin-top:8px;">${t('cierre.gracias')}</p>
