@@ -198,10 +198,7 @@
       cursor: pointer; transition: all 0.15s; text-decoration: none; white-space: nowrap;
     }
     .btn:active { transform: scale(0.97); }
-    .btn-wa { background: #25D366; color: #fff; }
-    .btn-wa:hover { filter: brightness(1.12); }
-    .btn-wa:disabled { background: var(--muted); color: var(--card); filter: none; cursor: not-allowed; }
-    /* Confirmar selección: ya no abre WhatsApp — navy propio, no reusar .btn-wa */
+    /* Confirmar selección: no abre WhatsApp — navy propio */
     .btn-navy { background: var(--navy); color: #fff; }
     .btn-navy:hover { filter: brightness(1.3); }
     .btn-navy:disabled { background: var(--muted); color: var(--card); filter: none; cursor: not-allowed; }
@@ -831,18 +828,6 @@ function fechaCR(iso, opts = {}, lang = idioma) {
   if (isNaN(d)) return '';
   return d.toLocaleDateString(lang === 'en' ? 'en-US' : 'es-CR', { timeZone: TZ_CR, day: 'numeric', month: 'long', year: 'numeric', ...opts });
 }
-// Días civiles CR transcurridos desde `iso` hasta hoy (0 = hoy). null si no hay fecha.
-function diasDesde(iso) {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d)) return null;
-  const civil = x => {
-    const p = new Intl.DateTimeFormat('en-CA', { timeZone: TZ_CR, year: 'numeric', month: '2-digit', day: '2-digit' }).format(x);
-    const [y, mo, da] = p.split('-').map(Number);
-    return Date.UTC(y, mo - 1, da);
-  };
-  return Math.max(0, Math.round((civil(new Date()) - civil(d)) / 86400000));
-}
 // Días HÁBILES (L-V, sin feriados) transcurridos desde `iso` hasta hoy, ambos
 // como fecha civil CR. El día hábil EN CURSO cuenta: pedido y visto el mismo
 // lunes → 1; pedido lunes visto viernes → 5; pedido viernes visto lunes → 2.
@@ -873,9 +858,9 @@ function diasHabilesDesde(iso) {
   return n;                                               // 0 solo en finde sin hábiles corridos
 }
 
-// UUID from ?id= (404 redirect) or ?k= (legacy)
+// UUID from ?id= (404 redirect)
 const params = new URLSearchParams(location.search);
-const cotId = params.get('id') || params.get('k');
+const cotId = params.get('id');
 // Modo vista previa interna (?preview=1): no registra vista ni permite aprobar
 const isPreview = params.has('preview');
 
